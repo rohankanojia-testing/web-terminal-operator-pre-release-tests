@@ -30,11 +30,11 @@ export class WebTerminalPage {
 
   constructor(page: Page) {
     this.page = page;
-
     console.log('Initializing WebTerminalPage locators...');
     this.webTerminalButton = page.locator('[data-quickstart-id="qs-masthead-cloudshell"]');
     this.webTerminalPage = page.locator('.xterm-helper-textarea');
-    this.startWTButton = page.locator('button[data-test-id="submit-button"]');
+    this.startWTButton = page.locator('button[data-test-id="submit-button"]:has-text("Start")');
+    this.startWTButton = page.locator('div:has-text("Initialize terminal") button[data-test-id="submit-button"]');
     this.projectDropdown = page.locator('input#form-input-namespace-field');
     this.projectCancelButton = page.locator('button[data-test-id="reset-button"]');
     this.terminalInactivityMessage = page.locator('div:has-text("The terminal connection has closed")');
@@ -72,23 +72,29 @@ export class WebTerminalPage {
     return value;
   }
 
-  async openWebTerminal(projectName?: string) {
-    console.log('Opening Web Terminal...');
+  async openWebTerminal(timeout: number = 30000) {
+    console.log("Opening Web Terminal...");
     await this.clickOnWebTerminalIcon();
+    await this.ensureTerminalInitialized()
+    console.log("⏳ Waiting for xterm textarea...");
+    await this.webTerminalPage.waitFor({ state: 'visible', timeout: timeout });
+    console.log("✔ Terminal ready!");
+  }
 
-    // Wait for terminal to appear
-    await this.waitTerminalIsStarted();
-
-    // Only select project if a name is provided and dropdown is empty
-    // if (projectName) {
-    //   const currentProject = await this.waitDisabledProjectFieldAndGetProjectName();
-    //   if (!currentProject || currentProject.trim() === '') {
-    //     console.log(`Selecting project: ${projectName} because terminal is opened first time`);
-    //     await this.findAndSelectProject(projectName);
-    //   } else {
-    //     console.log(`Project already selected: ${currentProject}, skipping project selection`);
-    //   }
-    // }
+  /**
+   * Detects if the "Initialize terminal" page is shown.
+   * If present, clicks the Start button to initialize the terminal.
+   * If not present within timeout, assumes terminal is already initialized.
+   */
+  async ensureTerminalInitialized(timeout: number = 5000) {
+    try {
+      await this.startWTButton.waitFor({ state: 'visible', timeout });
+      console.log("⚠ 'Initialize terminal' view detected!");
+      await this.clickOnStartWebTerminalButton();
+      console.log("✔ Clicked Start to initialize terminal.");
+    } catch (error) {
+      console.log(`ℹ 'Initialize terminal' view not found within ${timeout}ms, proceeding directly.`);
+    }
   }
 
   async waitDisabledProjectFieldAndGetProjectName(): Promise<string> {
@@ -145,6 +151,7 @@ export class WebTerminalPage {
     await this.terminalInactivityMessage.waitFor({ state: 'visible' });
     await this.restartButton.waitFor({ state: 'visible' });
     console.log('Terminal inactivity detected, Restart button visible.');
+    await this.restartButton.click();
   }
 
   async waitWebTerminalProjectNameField() {
@@ -239,4 +246,50 @@ export class WebTerminalPage {
     throw new Error(`Expected output not found: "${expected}"`);
   }
 
+  async waitForTerminalClosed(timeout: number = 30000) {
+    const closedMsg = this.page.locator(
+        'div.co-cloudshell-exec__error-msg:has-text("The terminal connection has closed")'
+    );
+    console.log("Waiting for terminal to close...");
+    try {
+      await closedMsg.waitFor({ state: 'visible', timeout }); // actively waits up to `timeout`
+      console.log("⚠ Terminal connection closed detected!");
+      return true;
+    } catch {
+      console.log("ℹ Terminal did not close within timeout");
+      return false;
+    }
+  }
+
+  async restartTerminal(timeout: number = 30000) {
+    const restartBtn = this.page.locator('button:has-text("Restart terminal")');
+
+    console.log('⚠ Terminal connection closed! Restarting...');
+    await restartBtn.click({ force: true });
+
+    // Wait for terminal to appear, with timeout
+    const startTime = Date.now();
+    while (true) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed > timeout) {
+        throw new Error(`❌ Terminal did not restart within ${timeout / 1000}s`);
+      }
+
+      try {
+        // Replace with your existing wait for xterm logic
+        if (await this.webTerminalPage.isVisible({ timeout: 1000 })) {
+          console.log('✔ Terminal restarted and ready!');
+          break;
+        }
+      } catch {
+        // ignore, retry
+      }
+
+      await this.page.waitForTimeout(500); // small wait before retry
+    }
+  }
+
+  async close() {
+    await this.page.close();
+  }
 }

@@ -6,7 +6,7 @@
 DOCKER_IMAGE := mcr.microsoft.com/playwright:v1.57.0-jammy
 
 # Logs and Directory Setup
-LOG_DIR := playwright_logs_$(shell date +%Y%m%d_%H%M%S)
+LOG_DIR := playwright_logs
 LOG_DIR_CONTAINER := /app/$(LOG_DIR) # Path inside the container
 
 # Hardcoded Credentials
@@ -45,8 +45,6 @@ test: install
 	USER_PROVIDER=$(USER_PROVIDER) \
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	npx playwright test --reporter=list --output=$(LOG_DIR)
-	@echo "Generating HTML report..."
-	npx playwright show-report $(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
 
 # -------------------------------
@@ -71,6 +69,4 @@ test-docker:
 			npx playwright install --with-deps && \
 			npx playwright test --reporter=list --output=$(LOG_DIR_CONTAINER) \
 		"
-	@echo "Generating HTML report..."
-	npx playwright show-report $(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
