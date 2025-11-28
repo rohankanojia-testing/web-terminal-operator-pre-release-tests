@@ -1,7 +1,7 @@
 import { test as base, expect, chromium } from '@playwright/test';
 import { WebTerminalPage } from './helpers/webTerminalHelper';
-import { loginOpenShift } from './helpers/loginHelper';
-import {LONG_TIMEOUT, SHORT_TIMEOUT} from "./helpers/constants";
+import {doOpenShiftLoginAsPerMode, loginOpenShift} from './helpers/loginHelper';
+import {LONG_TIMEOUT, SHORT_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
 
 const test = base.extend<{ page: any }>({
     page: async ({}, use) => {
@@ -18,13 +18,9 @@ test.describe('WTOCTL : Change shell to zsh', () => {
     let terminal: WebTerminalPage;
 
     test.beforeAll(async ({ page }) => {
-        test.setTimeout(LONG_TIMEOUT);
-        await loginOpenShift(page, {
-            mode: process.env.TEST_MODE!,
-            consoleUrl: process.env.CONSOLE_URL!,
-            username: process.env.KUBEADMIN_USERNAME!,
-            password: process.env.KUBEADMIN_PASSWORD!,
-        });
+        test.setTimeout(TEST_SETUP_TIMEOUT);
+        const testMode = process.env.TEST_MODE || 'admin';
+        await doOpenShiftLoginAsPerMode(page, testMode);
         terminal = new WebTerminalPage(page);
         await terminal.openWebTerminal(LONG_TIMEOUT);
     });

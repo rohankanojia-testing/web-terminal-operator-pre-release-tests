@@ -1,7 +1,7 @@
 import { test as base, expect, chromium } from '@playwright/test';
 import { WebTerminalPage } from './helpers/webTerminalHelper';
-import { loginOpenShift } from './helpers/loginHelper';
-import { LONG_TIMEOUT } from "./helpers/constants";
+import { doOpenShiftLoginAsPerMode } from './helpers/loginHelper';
+import {LONG_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
 
 const test = base.extend<{ page: any }>({
     page: async ({ }, use) => {
@@ -18,14 +18,9 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
     let terminal: WebTerminalPage;
 
     test.beforeAll(async ({ page }) => {
-        test.setTimeout(LONG_TIMEOUT);
-        console.log('Logging into OpenShift...');
-        await loginOpenShift(page, {
-            mode: process.env.TEST_MODE!,
-            consoleUrl: process.env.CONSOLE_URL!,
-            username: process.env.KUBEADMIN_USERNAME!,
-            password: process.env.KUBEADMIN_PASSWORD!,
-        });
+        test.setTimeout(TEST_SETUP_TIMEOUT);
+        const testMode = process.env.TEST_MODE || 'admin';
+        await doOpenShiftLoginAsPerMode(page, testMode);
 
         terminal = new WebTerminalPage(page);
 
@@ -59,7 +54,13 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
 
         // Wait until terminal output contains all expected tools
         const output = (await terminal.getTerminalOutput()) || '';
-        console.log("Help command output:\n" + output);
+        console.log("=========================================");
+        console.log("🚀 Help Command Output Start");
+        console.log("=========================================");
+        console.log(output);
+        console.log("=========================================");
+        console.log("🚀 Help Command Output End");
+        console.log("=========================================");
 
         for (const tool of expectedTools) {
             if (!tool) continue; // skip undefined tools

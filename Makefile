@@ -17,11 +17,12 @@ LOG_DIR_CONTAINER := /app/$(LOG_DIR) # Path inside the container
 CONSOLE_URL_HARDCODED := https://console-openshift-console.apps-crc.testing
 KUBEADMIN_USERNAME_HARDCODED := kubeadmin
 KUBEADMIN_PASSWORD_HARDCODED := secret
+DEFAULT_PROVIDER := kube:admin
+USER_PROVIDER := my_htpasswd_provider
 
 # Test user
 CLUSTER_USER := user1
 CLUSTER_PASS := test
-USER_PROVIDER := my_htpasswd_provider
 
 # -------------------------------
 # Local Installation (host machine)
@@ -49,7 +50,7 @@ test: install
 	TEST_MODE=admin \
 	TEST_USER=$(CLUSTER_USER) \
 	USER_PASSWORD=$(CLUSTER_PASS) \
-	USER_PROVIDER=$(USER_PROVIDER) \
+	USER_PROVIDER=$(DEFAULT_PROVIDER) \
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
@@ -83,7 +84,7 @@ test-docker:
 		-e KUBEADMIN_PASSWORD=$(KUBEADMIN_PASSWORD_HARDCODED) \
 		-e TEST_USER=$(CLUSTER_USER) \
 		-e USER_PASSWORD=$(CLUSTER_PASS) \
-		-e USER_PROVIDER=$(USER_PROVIDER) \
+		-e USER_PROVIDER=$(DEFAULT_PROVIDER) \
 		$(DOCKER_IMAGE) \
 		bash -c "\
 			npm install playwright @playwright/test && \
