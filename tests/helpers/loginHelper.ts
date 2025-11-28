@@ -1,13 +1,14 @@
 import { Page } from '@playwright/test';
+import {LONG_TIMEOUT} from "./constants";
 
 export type LoginMode = 'admin' | 'user';
 
 interface LoginOptions {
   mode: LoginMode;
   consoleUrl: string;
-  username?: string;         // only required for regular user
+  username: string;         // required for both admin and regular user
   password: string;
-  provider?: string;         // identity provider name (default auto)
+  provider?: string;        // identity provider name (default auto)
 }
 
 export async function loginOpenShift(page: Page, options: LoginOptions) {
@@ -23,7 +24,7 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
   await page.goto(consoleUrl);
 
   // 1️⃣ Select identity provider (if exists)
-  // Admin defaults to provider "kube:admin"
+  // Admin mode uses provider for checking identity provider only
   const providerName = provider || (mode === 'admin' ? 'kube:admin' : undefined);
 
   if (providerName) {
@@ -52,18 +53,17 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
 
   console.log("Login form detected.");
 
-  // 3️⃣ Fill credentials
-  const userToLogin = mode === 'admin' ? 'kubeadmin' : username!;
-  console.log(`Logging in as: ${userToLogin}`);
-
-  await usernameInput.fill(userToLogin);
+  // 3️⃣ Fill credentials using provided username
+  console.log(`Logging in as: ${username}`);
+  await usernameInput.fill(username);
   await passwordInput.fill(password);
 
   // 4️⃣ Submit and wait for console to load
   await Promise.all([
-    page.waitForURL(/overview|dashboards/, { timeout: 30000 }),
+    page.waitForURL(/overview|dashboards/, { timeout: LONG_TIMEOUT }),
     loginButton.click(),
   ]);
 
-  console.log(`Login successful as ${userToLogin}`);
+  console.log(`Login successful as ${username}`);
 }
+

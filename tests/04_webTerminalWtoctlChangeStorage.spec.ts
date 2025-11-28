@@ -21,7 +21,7 @@ test.describe('WTOCTL : Change PVC storage', () => {
         await loginOpenShift(page, {
             mode: 'admin',
             consoleUrl: process.env.CONSOLE_URL!,
-            username: 'kubeadmin',
+            username: process.env.KUBEADMIN_USERNAME!,
             password: process.env.KUBEADMIN_PASSWORD!,
         });
         terminal = new WebTerminalPage(page);

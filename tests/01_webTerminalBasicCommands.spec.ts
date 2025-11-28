@@ -12,9 +12,6 @@ const test = base.extend<{ page: any }>({
     },
 });
 
-// force single worker
-test.describe.configure({ mode: 'serial' });
-
 test.describe('OpenShift Web Terminal E2E - Sequential', () => {
     let terminal: WebTerminalPage;
 
@@ -23,7 +20,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
         await loginOpenShift(page, {
             mode: 'admin',
             consoleUrl: process.env.CONSOLE_URL!,
-            username: 'kubeadmin',
+            username: process.env.KUBEADMIN_USERNAME!,
             password: process.env.KUBEADMIN_PASSWORD!,
         });
 

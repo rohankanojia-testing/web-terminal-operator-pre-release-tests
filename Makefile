@@ -11,6 +11,7 @@ LOG_DIR_CONTAINER := /app/$(LOG_DIR) # Path inside the container
 
 # Hardcoded Credentials
 CONSOLE_URL_HARDCODED := https://console-openshift-console.apps-crc.testing
+KUBEADMIN_USERNAME_HARDCODED := kubeadmin
 KUBEADMIN_PASSWORD_HARDCODED := secret
 
 # Test user
@@ -39,6 +40,7 @@ test: install
 	@echo "Logs will be saved in: $(LOG_DIR)"
 	@mkdir -p $(LOG_DIR)
 	CONSOLE_URL=$(CONSOLE_URL_HARDCODED) \
+	KUBEADMIN_USERNAME=$(KUBEADMIN_USERNAME_HARDCODED) \
 	KUBEADMIN_PASSWORD=$(KUBEADMIN_PASSWORD_HARDCODED) \
 	TEST_USER=$(CLUSTER_USER) \
 	USER_PASSWORD=$(CLUSTER_PASS) \
