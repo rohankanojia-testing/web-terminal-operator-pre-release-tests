@@ -46,6 +46,21 @@ test: install
 	CONSOLE_URL=$(CONSOLE_URL_HARDCODED) \
 	KUBEADMIN_USERNAME=$(KUBEADMIN_USERNAME_HARDCODED) \
 	KUBEADMIN_PASSWORD=$(KUBEADMIN_PASSWORD_HARDCODED) \
+	TEST_MODE=admin \
+	TEST_USER=$(CLUSTER_USER) \
+	USER_PASSWORD=$(CLUSTER_PASS) \
+	USER_PROVIDER=$(USER_PROVIDER) \
+	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+	npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
+	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
+
+.PHONY: test-user
+test-user: install
+	@echo "Running Playwright tests locally..."
+	@echo "Logs will be saved in: $(LOG_DIR)"
+	@mkdir -p $(LOG_DIR)
+	CONSOLE_URL=$(CONSOLE_URL_HARDCODED) \
+	TEST_MODE=user \
 	TEST_USER=$(CLUSTER_USER) \
 	USER_PASSWORD=$(CLUSTER_PASS) \
 	USER_PROVIDER=$(USER_PROVIDER) \

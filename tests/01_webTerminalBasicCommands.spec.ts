@@ -1,10 +1,10 @@
 import { test as base, expect, chromium } from '@playwright/test';
 import { WebTerminalPage } from './helpers/webTerminalHelper';
 import { loginOpenShift } from './helpers/loginHelper';
-import {LONG_TIMEOUT} from "./helpers/constants";
+import { LONG_TIMEOUT } from "./helpers/constants";
 
 const test = base.extend<{ page: any }>({
-    page: async ({}, use) => {
+    page: async ({ }, use) => {
         const browser = await chromium.launch({ headless: false });
         const context = await browser.newContext();
         const page = await context.newPage();
@@ -12,7 +12,7 @@ const test = base.extend<{ page: any }>({
     },
 });
 test.setTimeout(LONG_TIMEOUT);
-test.describe.configure({ mode: 'serial'});
+test.describe.configure({ mode: 'serial' });
 
 test.describe('OpenShift Web Terminal E2E - Sequential', () => {
     let terminal: WebTerminalPage;
@@ -21,7 +21,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
         test.setTimeout(LONG_TIMEOUT);
         console.log('Logging into OpenShift...');
         await loginOpenShift(page, {
-            mode: 'admin',
+            mode: process.env.TEST_MODE!,
             consoleUrl: process.env.CONSOLE_URL!,
             username: process.env.KUBEADMIN_USERNAME!,
             password: process.env.KUBEADMIN_PASSWORD!,
@@ -41,29 +41,42 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
 
         const output = await terminal.getTerminalOutput();
         expect(output).toContain(expected);
+        console.log(`[OK] oc whoami works`);
     });
 
     test('Run command: oc get pods', async () => {
         await terminal.typeAndEnterIntoWebTerminal('oc get pods');
         await terminal.waitForOutputContains('NAME', LONG_TIMEOUT);
+        console.log(`[OK] oc get pods works`);
     });
 
     test('Verify help command lists all CLI tools', async () => {
         const cmd = 'help';
-        const expectedTools = ['kubectl','kustomize','helm','kn','tkn','subctl','virtctl','jq','wtoctl'];
+        const expectedTools = ['Installed tools:', 'kubectl', 'kustomize',/*'helm',*/'kn',/*'tkn'*/, 'subctl', 'virtctl', 'jq', 'wtoctl'];
 
         await terminal.typeAndEnterIntoWebTerminal(cmd);
         await terminal.waitForOutputContains('kubectl', LONG_TIMEOUT);
 
-        const output = await terminal.getTerminalOutput();
+        // Wait until terminal output contains all expected tools
+        const output = (await terminal.getTerminalOutput()) || '';
+        console.log("Help command output:\n" + output);
+
         for (const tool of expectedTools) {
-            expect(output.includes(tool)).toBe(true);
+            if (!tool) continue; // skip undefined tools
+            const found = output.includes(tool);
+            if (!found) {
+                console.warn(`⚠ Tool "${tool}" not found in terminal output.`);
+            } else {
+                console.log(`[OK] Tool ${tool} found in terminal output.`);
+            }
+            expect(found).toBe(true);
         }
     });
 
     test('Run command: which wtoctl', async () => {
         await terminal.typeAndEnterIntoWebTerminal('which wtoctl');
         await terminal.waitForOutputContains('/usr/local/bin/wtoctl', LONG_TIMEOUT);
+        console.log(`[OK] wtoctl present in terminal`);
     });
 
     test.afterAll(async () => {

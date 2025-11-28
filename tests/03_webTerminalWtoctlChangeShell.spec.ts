@@ -21,7 +21,7 @@ test.describe('WTOCTL : Change shell to zsh', () => {
     test.beforeAll(async ({ page }) => {
         test.setTimeout(LONG_TIMEOUT);
         await loginOpenShift(page, {
-            mode: 'admin',
+            mode: process.env.TEST_MODE!,
             consoleUrl: process.env.CONSOLE_URL!,
             username: process.env.KUBEADMIN_USERNAME!,
             password: process.env.KUBEADMIN_PASSWORD!,

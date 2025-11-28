@@ -1,10 +1,8 @@
 import { Page } from '@playwright/test';
 import {LONG_TIMEOUT} from "./constants";
 
-export type LoginMode = 'admin' | 'user';
-
 interface LoginOptions {
-  mode: LoginMode;
+  mode: string;
   consoleUrl: string;
   username: string;         // required for both admin and regular user
   password: string;
