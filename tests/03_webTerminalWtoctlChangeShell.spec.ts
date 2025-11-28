@@ -34,18 +34,33 @@ test.describe('WTOCTL : Change shell to zsh', () => {
         const cmd = 'wtoctl set shell zsh';
         const expected = 'Updated Web Terminal shell to zsh. Terminal may restart.';
 
+        console.log('[STEP 1/4] Command to set shell:', cmd);
         await terminal.typeAndEnterIntoWebTerminal(cmd);
-        await terminal.waitForOutputContains(expected, LONG_TIMEOUT);
 
+        console.log('[STEP 2/4] Waiting for confirmation output...');
+        await terminal.waitForOutputContains(expected, LONG_TIMEOUT);
+        console.log('[OK] Confirmation received: Shell updated to zsh.');
+
+        console.log('[INFO] Checking if terminal closed...');
         const closed = await terminal.waitForTerminalClosed(LONG_TIMEOUT);
+
         if (closed) {
+            console.log('[OK] Terminal closed. Initiating restart...');
             await terminal.restartTerminal(LONG_TIMEOUT);
+            console.log('[OK] Terminal restart initiated.');
+        } else {
+            console.log('[INFO] Terminal did not close. Continuing test...');
         }
 
+        console.log('[STEP 3/4] Verifying new shell by running "echo $SHELL"...');
         await terminal.typeAndEnterIntoWebTerminal('echo $SHELL');
-        await terminal.waitForOutputContains('zsh', LONG_TIMEOUT);
 
+        await terminal.waitForOutputContains('zsh', LONG_TIMEOUT);
+        console.log('[OK] Shell verification successful. Current shell is "zsh".');
+
+        console.log('[STEP 4/4] Executing final cleanup command: "oc delete dw --all"...');
         await terminal.typeAndEnterIntoWebTerminal('oc delete dw --all');
+        console.log('[OK] Cleanup command executed. Test complete.');
     });
 
     test.afterAll(async () => {

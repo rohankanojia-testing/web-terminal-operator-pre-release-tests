@@ -30,10 +30,29 @@ test.describe('WTOCTL : Change shell to zsh', () => {
     });
 
     test('WTOCTL : configure terminal timeout', async () => {
-        await terminal.typeAndEnterIntoWebTerminal('wtoctl set timeout 15s');
-        await terminal.waitForOutputContains('Updated Web Terminal idle timeout to 15s. Terminal may restart', LONG_TIMEOUT);
+        const timeoutValue = '15s';
 
+        // Step 1: Set the idle timeout
+        console.log(`[STEP 1/3] Setting Web Terminal idle timeout to ${timeoutValue} with "wtoctl set timeout ${timeoutValue}"...`);
+        await terminal.typeAndEnterIntoWebTerminal(`wtoctl set timeout ${timeoutValue}`);
+
+        // Step 2: Wait for confirmation output
+        console.log('[STEP 2/3] Waiting for confirmation output...');
+        await terminal.waitForOutputContains(`Updated Web Terminal idle timeout to ${timeoutValue}. Terminal may restart`, LONG_TIMEOUT);
+        console.log('[OK] Timeout update confirmation received.');
+
+        // Step 3: Verify terminal closes
+        console.log('[STEP 3/3] Waiting for terminal to close to verify the setting took effect...');
         const closed = await terminal.waitForTerminalClosed(LONG_TIMEOUT);
+
+        if (closed) {
+            console.log('[OK] Terminal closed successfully, as expected.');
+        } else {
+            console.log('[FAIL] Terminal did NOT close within the expected timeout.');
+        }
+
+        // The assertion is separate but logged for context
+        console.log(`[ASSERT] Verifying closure status is "true". Status: ${closed}`);
         expect(closed).toBe(true);
     });
 
