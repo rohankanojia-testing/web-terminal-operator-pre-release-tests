@@ -11,13 +11,14 @@ const test = base.extend<{ page: any }>({
         await use(page);
     },
 });
-
+test.setTimeout(LONG_TIMEOUT);
 test.describe.configure({ mode: 'serial' }); // sequential
 
 test.describe('WTOCTL : Change shell to zsh', () => {
     let terminal: WebTerminalPage;
 
     test.beforeAll(async ({ page }) => {
+        test.setTimeout(LONG_TIMEOUT);
         await loginOpenShift(page, {
             mode: 'admin',
             consoleUrl: process.env.CONSOLE_URL!,
@@ -25,12 +26,10 @@ test.describe('WTOCTL : Change shell to zsh', () => {
             password: process.env.KUBEADMIN_PASSWORD!,
         });
         terminal = new WebTerminalPage(page);
-        await terminal.openWebTerminal(SHORT_TIMEOUT);
-        await page.locator('.xterm-rows').waitFor({ timeout: 60000 });
+        await terminal.openWebTerminal(LONG_TIMEOUT);
     });
 
     test('WTOCTL : configure terminal timeout', async () => {
-        await terminal.ensureTerminalInitialized(SHORT_TIMEOUT);
         await terminal.typeAndEnterIntoWebTerminal('wtoctl set timeout 15s');
         await terminal.waitForOutputContains('Updated Web Terminal idle timeout to 15s. Terminal may restart', LONG_TIMEOUT);
 

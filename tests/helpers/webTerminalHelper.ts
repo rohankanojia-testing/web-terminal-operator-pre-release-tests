@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { LONG_TIMEOUT } from './constants';
 
 export enum TimeUnits {
   Seconds = 'Seconds',
@@ -56,11 +57,6 @@ export class WebTerminalPage {
     await this.webTerminalButton.click();
   }
 
-  async waitTerminalIsStarted() {
-    console.log('Waiting for terminal to be visible...');
-    await this.webTerminalPage.waitFor({ state: 'visible' });
-  }
-
   async clickOnStartWebTerminalButton() {
     console.log('Clicking Start Web Terminal button...');
     await this.startWTButton.click();
@@ -72,12 +68,14 @@ export class WebTerminalPage {
     return value;
   }
 
-  async openWebTerminal(timeout: number = 30000) {
+  async openWebTerminal(timeout: number) {
     console.log("Opening Web Terminal...");
     await this.clickOnWebTerminalIcon();
-    await this.ensureTerminalInitialized()
+    await this.ensureTerminalInitialized();
     console.log("⏳ Waiting for xterm textarea...");
-    await this.webTerminalPage.waitFor({ state: 'visible', timeout: timeout });
+    await this.webTerminalPage.waitFor({state: 'visible', timeout: timeout});
+    console.log("Web terminal page visible");
+    // await this.page.locator('.xterm-rows').waitFor({ timeout: timeout });
     console.log("✔ Terminal ready!");
   }
 

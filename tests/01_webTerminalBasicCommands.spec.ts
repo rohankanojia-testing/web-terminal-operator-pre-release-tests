@@ -11,11 +11,14 @@ const test = base.extend<{ page: any }>({
         await use(page);
     },
 });
+test.setTimeout(LONG_TIMEOUT);
+test.describe.configure({ mode: 'serial'});
 
 test.describe('OpenShift Web Terminal E2E - Sequential', () => {
     let terminal: WebTerminalPage;
 
     test.beforeAll(async ({ page }) => {
+        test.setTimeout(LONG_TIMEOUT);
         console.log('Logging into OpenShift...');
         await loginOpenShift(page, {
             mode: 'admin',
@@ -28,15 +31,11 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
 
         console.log('Opening web terminal...');
         await terminal.openWebTerminal(LONG_TIMEOUT);
-
-        console.log('Waiting for real terminal to be ready...');
-        await page.locator('.xterm-rows').waitFor({ timeout: LONG_TIMEOUT });
-        console.log('Terminal ready.');
     });
 
     test('Run command: oc whoami', async () => {
         const cmd = 'oc whoami';
-        const expected = 'kubeadmin';
+        const expected = process.env.KUBEADMIN_USERNAME!;
         await terminal.typeAndEnterIntoWebTerminal(cmd);
         await terminal.waitForOutputContains(expected, LONG_TIMEOUT);
 

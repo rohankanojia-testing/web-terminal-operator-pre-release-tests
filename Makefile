@@ -5,6 +5,10 @@
 # Configuration
 DOCKER_IMAGE := mcr.microsoft.com/playwright:v1.57.0-jammy
 
+# Optional: Set TEST_FILE environment variable to run a specific test file.
+# Example: make test TEST_FILE=tests/example.spec.js
+TEST_FILE ?=
+
 # Logs and Directory Setup
 LOG_DIR := playwright_logs
 LOG_DIR_CONTAINER := /app/$(LOG_DIR) # Path inside the container
@@ -46,7 +50,7 @@ test: install
 	USER_PASSWORD=$(CLUSTER_PASS) \
 	USER_PROVIDER=$(USER_PROVIDER) \
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
-	npx playwright test --reporter=list --output=$(LOG_DIR)
+	npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
 
 # -------------------------------
@@ -69,6 +73,6 @@ test-docker:
 		bash -c "\
 			npm install playwright @playwright/test && \
 			npx playwright install --with-deps && \
-			npx playwright test --reporter=list --output=$(LOG_DIR_CONTAINER) \
+			npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR_CONTAINER) \
 		"
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
