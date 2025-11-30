@@ -30,7 +30,11 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
 
     test('Run command: oc whoami', async () => {
         const cmd = 'oc whoami';
-        const expected = process.env.KUBEADMIN_USERNAME!;
+        let expected = process.env.KUBEADMIN_USERNAME!;
+        if (expected === 'kubeadmin') {
+            expected = 'kube:admin';
+        }
+
         await terminal.typeAndEnterIntoWebTerminal(cmd);
         await terminal.waitForOutputContains(expected, LONG_TIMEOUT);
 
@@ -38,6 +42,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
         expect(output).toContain(expected);
         console.log(`[OK] oc whoami works`);
     });
+
 
     test('Run command: oc get pods', async () => {
         await terminal.typeAndEnterIntoWebTerminal('oc get pods');

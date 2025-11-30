@@ -10,7 +10,7 @@ interface LoginOptions {
 }
 
 export async function doOpenShiftLoginAsPerMode(page: Page, testMode: string) {
-  console.log('Logging into OpenShift as ${testMode}...');
+  console.log(`Logging into OpenShift as ${testMode}...`);
   if (testMode === 'admin') {
       // Admin login
       await loginOpenShift(page, {
@@ -48,8 +48,6 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
 
   // 1️⃣ Select identity provider (if exists)
   // Admin mode uses provider for checking identity provider only
-  const providerName = provider || (mode === 'admin' ? 'kube:admin' : 'my_htpasswd_provider');
-
   if (mode !== 'admin' && provider) {
     await selectIdentityProvider(page, mode, provider);
   }
