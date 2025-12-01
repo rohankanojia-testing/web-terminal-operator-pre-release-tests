@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { OcUtils } from './ocUtils';
 
 export class WebTerminalPage {
   public terminalRows: Locator;
@@ -56,27 +57,28 @@ export class WebTerminalPage {
   }
 
   async typeAndEnterIntoWebTerminal(text: string) {
-    console.debug(`Typing and sending Enter: ${text}`);
-    await this.webTerminalPage.type(text + '\n');
+    console.debug(`Typing and sending Enter (stdout + stderr to file): ${text}`);
+    // Redirect both stdout and stderr to /tmp/test-stdout.txt
+    await this.webTerminalPage.type(`${text} >> /tmp/test-stdout.txt 2>&1\n`);
   }
 
-  async getTerminalOutput(): Promise<string> {
-    const text = await this.page.locator('.xterm-rows').evaluate((el) => el.textContent);
-    return text?.replace(/\s+/g, ' ').trim() || '';
+  async provideInputIntoWebTerminal(text: string) {
+    await this.webTerminalPage.type(`${text}\n`);
   }
 
+  /*
+   * This version only works with OpenShift 4.20
+   */
   // async getTerminalOutput(): Promise<string> {
-  //   const text = await this.page.locator('.xterm-rows > div').evaluateAll((rows) =>
-  //       rows.map((row) => row.textContent || '').join('\n')
-  //   );
-  //   return text.trim();
+  //   const text = await this.page.locator('.xterm-rows').evaluate((el) => el.textContent);
+  //   return text?.replace(/\s+/g, ' ').trim() || '';
   // }
 
   async waitForOutputContains(expected: string, timeout = 10000) {
     const start = Date.now();
     let output = '';
     while (Date.now() - start < timeout) {
-      output = await this.getTerminalOutput();
+      output = await OcUtils.getTerminalOutput();
       if (output.includes(expected)) return;
       await this.page.waitForTimeout(500);
     }
@@ -99,7 +101,7 @@ export class WebTerminalPage {
     }
   }
 
-  async restartTerminal(timeout: number = 30000) {
+  async waitUntilTerminalIsRestarted(timeout: number = 30000) {
     const restartBtn = this.page.locator('button:has-text("Restart terminal")');
 
     console.debug('⚠ Terminal connection closed! Restarting...');

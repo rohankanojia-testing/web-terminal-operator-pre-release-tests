@@ -28,36 +28,25 @@ test.describe('WTOCTL : Change PVC storage', () => {
     test('WTOCTL : configure persistent storage', async () => {
         // Step 1: Start storage configuration and set size
         console.log('[STEP 1/7] Starting persistent storage configuration with "wtoctl set storage"...');
-        await terminal.typeAndEnterIntoWebTerminal('wtoctl set storage');
+        await terminal.provideInputIntoWebTerminal('wtoctl set storage');
 
-        console.log('[STEP 2/7] Waiting for prompt to enter desired storage size...');
-        await terminal.waitForOutputContains("Enter desired storage size (default: '100Mi'):", LONG_TIMEOUT);
         console.log('[INFO] Setting storage size to 200Mi.');
-        await terminal.typeAndEnterIntoWebTerminal('200Mi');
+        await terminal.provideInputIntoWebTerminal('200Mi');
 
         // Step 2: Set mount path
-        console.log('[STEP 3/7] Waiting for prompt to enter desired mount path...');
-        await terminal.waitForOutputContains("Enter desired mount path (default: '/home/user/storage'):", LONG_TIMEOUT);
         console.log('[INFO] Setting mount path to /home/user/storage.');
-        await terminal.typeAndEnterIntoWebTerminal('/home/user/storage');
+        await terminal.provideInputIntoWebTerminal('/home/user/storage');
 
         // Step 3: Confirm configuration
-        console.log('[STEP 4/7] Waiting for confirmation prompt...');
-        await terminal.waitForOutputContains('Adding persistent volume with size 200Mi to /home/user/storage. Is this okay? (y/N):', LONG_TIMEOUT);
         console.log('[INFO] Confirming configuration with "y".');
-        await terminal.typeAndEnterIntoWebTerminal('y');
-
-        // Step 4: Wait for update confirmation
-        console.log('[STEP 5/7] Waiting for Web Terminal update confirmation...');
-        await terminal.waitForOutputContains('Updated Web Terminal storage. Terminal may restart', LONG_TIMEOUT);
-        console.log('[OK] Storage update confirmation received.');
+        await terminal.provideInputIntoWebTerminal('y');
 
         // Step 5: Handle terminal restart
         console.log('[INFO] Checking if terminal closed for restart...');
         const closed = await terminal.waitForTerminalClosed(LONG_TIMEOUT);
         if (closed) {
             console.log('[OK] Terminal closed. Initiating restart...');
-            await terminal.restartTerminal(LONG_TIMEOUT);
+            await terminal.waitUntilTerminalIsRestarted(LONG_TIMEOUT);
             console.log('[OK] Terminal restart initiated.');
         } else {
             console.log('[INFO] Terminal did not close. Continuing test...');

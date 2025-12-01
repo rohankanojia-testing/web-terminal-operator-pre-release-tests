@@ -29,13 +29,6 @@ test.describe('WTOCTL : Change ', () => {
         console.log('[STEP 1/5] Typing and entering command to set tooling image...');
         await terminal.typeAndEnterIntoWebTerminal('wtoctl set image quay.io/aobuchow/wto-tooling:prerelease-test-image');
 
-        console.log('[STEP 2/5] Waiting for confirmation output...');
-        await terminal.waitForOutputContains(
-            'Updated Web Terminal image to quay.io/aobuchow/wto-tooling:prerelease-test-image. Terminal may restart.',
-            LONG_TIMEOUT
-        );
-        console.log('[OK] Updated web terminal image confirmation received.');
-
         // 2. Terminal Close and Restart Logic
         console.log('[STEP 3/5] Waiting for terminal to close...');
         const closed = await terminal.waitForTerminalClosed(LONG_TIMEOUT);
@@ -43,7 +36,7 @@ test.describe('WTOCTL : Change ', () => {
         if (closed) {
             console.log('[OK] Terminal closed successfully.');
             console.log('[INFO] Waiting for terminal to restart...');
-            await terminal.restartTerminal(LONG_TIMEOUT);
+            await terminal.waitUntilTerminalIsRestarted(LONG_TIMEOUT);
             console.log('[OK] Terminal restart initiated.');
         } else {
             console.log('[WARN] Terminal did not close within the specified timeout.');

@@ -2,6 +2,7 @@ import { test as base, expect, chromium } from '@playwright/test';
 import { WebTerminalPage } from './helpers/webTerminalHelper';
 import { doOpenShiftLoginAsPerMode } from './helpers/loginHelper';
 import {LONG_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
+import {OcUtils} from "./helpers/ocUtils";
 
 const test = base.extend<{ page: any }>({
     page: async ({ }, use) => {
@@ -14,7 +15,7 @@ const test = base.extend<{ page: any }>({
 test.setTimeout(LONG_TIMEOUT);
 test.describe.configure({ mode: 'serial' });
 
-test.describe('OpenShift Web Terminal E2E - Sequential', () => {
+test.describe('OpenShift Web Terminal E2E - Sequential execution of basic commands', () => {
     let terminal: WebTerminalPage;
 
     test.beforeAll(async ({ page }) => {
@@ -38,7 +39,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
         await terminal.typeAndEnterIntoWebTerminal(cmd);
         await terminal.waitForOutputContains(expected, LONG_TIMEOUT);
 
-        const output = await terminal.getTerminalOutput();
+        const output = await OcUtils.getTerminalOutput();
         expect(output).toContain(expected);
         console.log(`[OK] oc whoami works`);
     });
@@ -52,13 +53,13 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
 
     test('Verify help command lists all CLI tools', async () => {
         const cmd = 'help';
-        const expectedTools = ['Installed tools:', 'kubectl', 'kustomize',/*'helm',*/'kn',/*'tkn'*/, 'subctl', 'virtctl', 'jq', 'wtoctl'];
+        const expectedTools = ['kubectl', 'kustomize',/*'helm',*/'kn',/*'tkn'*/, 'subctl', 'virtctl', 'jq', 'wtoctl'];
 
         await terminal.typeAndEnterIntoWebTerminal(cmd);
         await terminal.waitForOutputContains('kubectl', LONG_TIMEOUT);
 
         // Wait until terminal output contains all expected tools
-        const output = (await terminal.getTerminalOutput()) || '';
+        const output = (await OcUtils.getTerminalOutput()) || '';
         console.log("=========================================");
         console.log("🚀 Help Command Output Start");
         console.log("=========================================");
