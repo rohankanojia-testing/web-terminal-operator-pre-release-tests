@@ -53,7 +53,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential execution of basic comman
 
     test('Verify help command lists all CLI tools', async () => {
         const cmd = 'help';
-        const expectedTools = ['kubectl', 'kustomize',/*'helm',*/'kn',/*'tkn'*/, 'subctl', 'virtctl', 'jq', 'wtoctl'];
+        const expectedTools = ['kubectl', 'kustomize',/*'helm',*/'kn',/*'tkn',*/ 'subctl', 'virtctl', 'jq', 'wtoctl'];
 
         await terminal.typeAndEnterIntoWebTerminal(cmd);
         await terminal.waitForOutputContains('kubectl', LONG_TIMEOUT);

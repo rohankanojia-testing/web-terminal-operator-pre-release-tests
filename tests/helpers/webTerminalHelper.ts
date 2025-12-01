@@ -36,7 +36,6 @@ export class WebTerminalPage {
     console.debug("⏳ Waiting for xterm textarea...");
     await this.webTerminalPage.waitFor({state: 'visible', timeout: timeout});
     console.debug("Web terminal page visible");
-    // await this.page.locator('.xterm-rows').waitFor({ timeout: timeout });
     console.debug("✔ Terminal ready!");
   }
 
@@ -59,11 +58,11 @@ export class WebTerminalPage {
   async typeAndEnterIntoWebTerminal(text: string) {
     console.debug(`Typing and sending Enter (stdout + stderr to file): ${text}`);
     // Redirect both stdout and stderr to /tmp/test-stdout.txt
-    await this.webTerminalPage.type(`${text} >> /tmp/test-stdout.txt 2>&1\n`);
+    await this.webTerminalPage.fill(`${text} >> /tmp/test-stdout.txt 2>&1\n`);
   }
 
   async provideInputIntoWebTerminal(text: string) {
-    await this.webTerminalPage.type(`${text}\n`);
+    await this.webTerminalPage.fill(`${text}\n`);
   }
 
   /*

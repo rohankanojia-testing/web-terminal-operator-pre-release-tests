@@ -1,7 +1,7 @@
 import { test as base, chromium } from '@playwright/test';
 import { WebTerminalPage } from './helpers/webTerminalHelper';
-import {doOpenShiftLoginAsPerMode, loginOpenShift} from './helpers/loginHelper';
-import {LONG_TIMEOUT, SHORT_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
+import {doOpenShiftLoginAsPerMode} from './helpers/loginHelper';
+import {LONG_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
 
 const test = base.extend<{ page: any }>({
     page: async ({}, use) => {

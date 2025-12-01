@@ -7,13 +7,8 @@ const execPromise = util.promisify(exec);
 export class OcUtils {
     static async getTerminalOutput(lines: number = 10): Promise<string> {
         try {
-            console.debug("=== getTerminalOutput() called ===");
-            console.debug("Requested last lines:", lines);
-
             const namespace = process.env.WEB_TERMINAL_NAMESPACE;
             if (!namespace) throw new Error("WEB_TERMINAL_NAMESPACE environment variable is not set");
-
-            console.debug("Executing one-call shell command...");
 
             // One-call shell command
             const command = `
@@ -38,8 +33,6 @@ sh -c '
   oc exec -n ${namespace} "$POD" -c web-terminal-tooling -- tail -n ${lines} /tmp/test-stdout.txt
 '
         `;
-
-            console.debug("One-call command:", command);
 
             const { stdout, stderr } = await execPromise(command);
 
