@@ -32,7 +32,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential', () => {
         const cmd = 'oc whoami';
         let expected = process.env.KUBEADMIN_USERNAME!;
         if (expected === 'kubeadmin') {
-            expected = 'kube:admin';
+            expected = process.env.EXPECTED_KUBEADMIN_WHOAMI_OUTPUT;
         }
 
         await terminal.typeAndEnterIntoWebTerminal(cmd);

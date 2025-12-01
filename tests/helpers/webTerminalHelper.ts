@@ -65,6 +65,13 @@ export class WebTerminalPage {
     return text?.replace(/\s+/g, ' ').trim() || '';
   }
 
+  // async getTerminalOutput(): Promise<string> {
+  //   const text = await this.page.locator('.xterm-rows > div').evaluateAll((rows) =>
+  //       rows.map((row) => row.textContent || '').join('\n')
+  //   );
+  //   return text.trim();
+  // }
+
   async waitForOutputContains(expected: string, timeout = 10000) {
     const start = Date.now();
     let output = '';
