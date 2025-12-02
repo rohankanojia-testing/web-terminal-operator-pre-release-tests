@@ -22,6 +22,33 @@ The tests are designed to run sequentially and support both admin and regular us
 - Web Terminal Operator Installed on OpenShift cluster
 - DevWorkspace Operator Installed on OpenShift cluster
 
+### Environment Configuration
+
+You can store all OpenShift cluster related test parameters in a `.env` file instead of editing the Makefile.
+
+#### Create `.env` file:
+
+Create a file named `.env` in the repository root (see [`sample-env.txt`](./sample-env.txt) in this repo):
+
+```env
+CONSOLE_URL=https://console-openshift-console.apps-crc.testing
+
+# Admin credentials
+KUBEADMIN_USERNAME=
+KUBEADMIN_PASSWORD=
+EXPECTED_KUBEADMIN_WHOAMI_OUTPUT=
+ADMIN_WEB_TERMINAL_NAMESPACE=
+
+# User credentials
+CLUSTER_USER=
+CLUSTER_USER_PASSWORD=
+USER_PROVIDER=
+USER_WEB_TERMINAL_NAMESPACE=
+
+# General
+PLAYWRIGHT_TESTS_HEADLESS=
+```
+
 ### Installation
 
 Install dependencies locally:

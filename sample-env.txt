@@ -1,0 +1,17 @@
+CONSOLE_URL=https://console-openshift-console.apps-crc.testing
+
+# Admin credentials
+KUBEADMIN_USERNAME=kubeadmin
+KUBEADMIN_PASSWORD=<your-password>
+EXPECTED_KUBEADMIN_WHOAMI_OUTPUT=kubeadmin
+ADMIN_WEB_TERMINAL_NAMESPACE=openshift-terminal
+DEFAULT_PROVIDER=kube:admin
+
+# User credentials
+CLUSTER_USER=developer
+CLUSTER_USER_PASSWORD=<your-user-password>
+USER_PROVIDER=my_htpasswd_provider
+USER_WEB_TERMINAL_NAMESPACE=test
+
+# General
+PLAYWRIGHT_TESTS_HEADLESS=true
