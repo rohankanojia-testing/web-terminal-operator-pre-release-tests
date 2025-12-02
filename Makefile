@@ -8,6 +8,7 @@ DOCKER_IMAGE := mcr.microsoft.com/playwright:v1.57.0-jammy
 # Optional: Set TEST_FILE environment variable to run a specific test file.
 # Example: make test TEST_FILE=tests/example.spec.js
 TEST_FILE ?=
+PLAYWRIGHT_TESTS_HEADLESS := true
 
 # Logs and Directory Setup
 LOG_DIR := playwright_logs
@@ -57,6 +58,7 @@ test: install
 	USER_PASSWORD=$(CLUSTER_PASS) \
 	USER_PROVIDER=$(DEFAULT_PROVIDER) \
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
 	npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
 
@@ -72,6 +74,7 @@ test-user: install
 	USER_PROVIDER=$(USER_PROVIDER) \
 	WEB_TERMINAL_NAMESPACE=$(USER_WEB_TERMINAL_NAMESPACE) \
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
 	npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
 
@@ -92,6 +95,7 @@ test-docker:
 		-e TEST_USER=$(CLUSTER_USER) \
 		-e USER_PASSWORD=$(CLUSTER_PASS) \
 		-e USER_PROVIDER=$(DEFAULT_PROVIDER) \
+		-e PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
 		$(DOCKER_IMAGE) \
 		bash -c "\
 			npm install playwright @playwright/test && \

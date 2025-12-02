@@ -33,8 +33,10 @@ make install
 ### Running Tests
 
 #### Run All Tests Locally (Cluster Admin Mode)
-
+Before running make sure that you've logged into terminal via `oc` for specified user. Test checks pod state by `oc exec`
+into terminal pod, it's necessary to log in with correct user:
 ```bash
+oc login -u kubeadmin -p <your-pwd> https://api.crc.testing:6443
 make test
 ```
 
@@ -45,7 +47,10 @@ This will:
 
 #### Run All Tests Locally (User Mode)
 
+Before running make sure that you've logged into terminal via `oc` for specified user. Test checks pod state by `oc exec`
+into terminal pod, it's necessary to log in with correct user:
 ```bash
+oc login -u developer -p developer https://api.crc.testing:6443
 make test-user
 ```
 

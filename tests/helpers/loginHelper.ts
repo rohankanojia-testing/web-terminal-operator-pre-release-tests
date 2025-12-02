@@ -44,11 +44,10 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
   } = options;
 
   console.log(`Opening console: ${consoleUrl}`);
-  await page.goto(consoleUrl);
+  await page.goto(consoleUrl, { waitUntil: "domcontentloaded" });
 
-  // 1️⃣ Select identity provider (if exists)
-  // Admin mode uses provider for checking identity provider only
-  if (mode !== 'admin' && provider) {
+  if (page.url().includes("/oauth/authorize")) {
+    console.log("🔐 OAuth redirect detected — handling OAuth flow…");
     await selectIdentityProvider(page, mode, provider);
   }
 
@@ -71,11 +70,8 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
   await usernameInput.fill(username);
   await passwordInput.fill(password);
 
-  // 4️⃣ Submit and wait for console to load
-  await Promise.all([
-    page.waitForURL(/overview|dashboards/, { timeout: LONG_TIMEOUT }),
-    loginButton.click(),
-  ]);
+  await loginButton.click();
+  await page.waitForLoadState("networkidle"); // waits until page finishes loading
 
   console.log(`Login successful as ${username}`);
 }

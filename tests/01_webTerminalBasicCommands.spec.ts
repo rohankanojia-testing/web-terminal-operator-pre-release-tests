@@ -17,10 +17,11 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('OpenShift Web Terminal E2E - Sequential execution of basic commands', () => {
     let terminal: WebTerminalPage;
+    let testMode: string;
 
     test.beforeAll(async ({ page }) => {
         test.setTimeout(TEST_SETUP_TIMEOUT);
-        const testMode = process.env.TEST_MODE || 'admin';
+        testMode = process.env.TEST_MODE || 'admin';
         await doOpenShiftLoginAsPerMode(page, testMode);
 
         terminal = new WebTerminalPage(page);
@@ -31,7 +32,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential execution of basic comman
 
     test('Run command: oc whoami', async () => {
         const cmd = 'oc whoami';
-        let expected = process.env.KUBEADMIN_USERNAME!;
+        let expected = testMode === 'admin' ? process.env.KUBEADMIN_USERNAME! : process.env.TEST_USER!;
         if (expected === 'kubeadmin') {
             expected = process.env.EXPECTED_KUBEADMIN_WHOAMI_OUTPUT;
         }

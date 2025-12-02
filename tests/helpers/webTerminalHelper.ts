@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { OcUtils } from './ocUtils';
+import {SHORT_TIMEOUT} from "./constants";
 
 export class WebTerminalPage {
   public terminalRows: Locator;
@@ -15,7 +16,6 @@ export class WebTerminalPage {
     console.debug('Initializing WebTerminalPage locators...');
     this.webTerminalButton = page.locator('[data-quickstart-id="qs-masthead-cloudshell"]');
     this.webTerminalPage = page.locator('.xterm-helper-textarea');
-    this.startWTButton = page.locator('button[data-test-id="submit-button"]:has-text("Start")');
     this.startWTButton = page.locator('div:has-text("Initialize terminal") button[data-test-id="submit-button"]');
     this.terminalRows = page.locator('.xterm-rows > div');
   }
@@ -29,14 +29,75 @@ export class WebTerminalPage {
     console.debug('Clicking Start Web Terminal button...');
     await this.startWTButton.click();
   }
+
   async openWebTerminal(timeout: number) {
     console.debug("Opening Web Terminal...");
     await this.clickOnWebTerminalIcon();
-    await this.ensureTerminalInitialized();
-    console.debug("⏳ Waiting for xterm textarea...");
-    await this.webTerminalPage.waitFor({state: 'visible', timeout: timeout});
-    console.debug("Web terminal page visible");
+
+    const terminalTextArea = this.webTerminalPage; // Your xterm locator
+    const initPanel =  this.page.locator('.wt-cloud-shell-setup');
+
+    console.debug("⏳ Detecting whether terminal needs initialization...");
+
+    const initNeeded = await Promise.race([
+      initPanel.waitFor({ state: 'visible', timeout }).then(() => true).catch(() => false),
+      terminalTextArea.waitFor({ state: 'visible', timeout }).then(() => false).catch(() => false)
+    ]);
+
+    if (initNeeded) {
+      console.debug("🛠 Terminal initialization detected — waiting for it to finish...");
+      await this.ensureTerminalInitialized(timeout);
+      console.debug("⏳ Waiting for terminal to be visible...");
+      await terminalTextArea.waitFor({ state: 'visible', timeout });
+    } else {
+      console.debug("⚡ Terminal already ready — skipping initialization.");
+    }
+
     console.debug("✔ Terminal ready!");
+  }
+
+  async handleProjectCreationIfNeeded(namespace: string, timeout: number) {
+    const debugPrefix = `[Debug] Project creation for "${namespace}"`;
+
+    this.page.locator('input#form-input-newNamespace-field');
+    const projectDropdown = this.page.locator('button#form-ns-dropdown-namespace-field');
+    const projectFilterInput = this.page.locator('input[placeholder="Select Project"]');
+    const projectEntry = this.page.locator(`button#${namespace}-link`);
+
+    const isDropdownVisible = await projectDropdown.isVisible({ timeout });
+    if (isDropdownVisible) {
+      console.debug('Project dropdown detected — clicking to open...');
+      await projectDropdown.click();
+      console.log(`${debugPrefix}: Checking for Dropdown Filter input...`);
+
+      const isFilterVisible = await projectFilterInput.isVisible({ timeout: timeout }); // Shorter timeout for sub-element
+      if (isFilterVisible) {
+        console.debug(`Typing "${namespace}" in dropdown filter`);
+        await projectFilterInput.focus();
+        await this.page.keyboard.type(namespace, { delay: 0 });
+        await projectEntry.waitFor({ state: 'visible', timeout });
+      } else {
+        console.warn(`${debugPrefix}: ⚠️ STAGE 2A FAIL: Dropdown filter input not visible.`);
+      }
+
+      console.log(`${debugPrefix}: Checking for Project Entry "${namespace}"...`);
+
+      const isProjectEntryVisible = await projectEntry.isVisible({ timeout: timeout }); // Shorter timeout
+
+      console.log(`${debugPrefix}:   -> Project Entry visibility check result: ${isProjectEntryVisible}`);
+
+      if (isProjectEntryVisible) {
+        console.debug(`✅ STAGE 2B SUCCESS: Selecting project "${namespace}"`);
+        await projectEntry.click();
+        return true; // Project selected
+      } else {
+        console.warn(`${debugPrefix}: ⚠️ STAGE 2B FAIL: Project "${namespace}" not found in dropdown list.`);
+        return false;
+      }
+    }
+
+    console.warn(`${debugPrefix}: ❌ FINAL FAILURE: Neither 'New Project' input nor dropdown found within timeout.`);
+    return false;
   }
 
   /**
@@ -46,6 +107,8 @@ export class WebTerminalPage {
    */
   async ensureTerminalInitialized(timeout: number = 5000) {
     try {
+      await this.handleProjectCreationIfNeeded(process.env.WEB_TERMINAL_NAMESPACE, SHORT_TIMEOUT);
+      console.log('Waiting for start button to become visible');
       await this.startWTButton.waitFor({ state: 'visible', timeout });
       console.debug("⚠ 'Initialize terminal' view detected!");
       await this.clickOnStartWebTerminalButton();
@@ -58,11 +121,15 @@ export class WebTerminalPage {
   async typeAndEnterIntoWebTerminal(text: string) {
     console.debug(`Typing and sending Enter (stdout + stderr to file): ${text}`);
     // Redirect both stdout and stderr to /tmp/test-stdout.txt
-    await this.webTerminalPage.fill(`${text} >> /tmp/test-stdout.txt 2>&1\n`);
+    await this.webTerminalPage.focus();
+    await this.page.keyboard.type(`${text} >> /tmp/test-stdout.txt 2>&1`,  { delay: 0 });
+    await this.page.keyboard.press('Enter');
   }
 
   async provideInputIntoWebTerminal(text: string) {
-    await this.webTerminalPage.fill(`${text}\n`);
+    await this.webTerminalPage.focus();
+    await this.page.keyboard.type(`${text}`,  { delay: 0 });
+    await this.page.keyboard.press('Enter');
   }
 
   /*
