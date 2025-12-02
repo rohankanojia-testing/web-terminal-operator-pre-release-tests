@@ -26,22 +26,18 @@ test.describe('WTOCTL : Change PVC storage', () => {
     });
 
     test('WTOCTL : configure persistent storage', async () => {
-        // Step 1: Start storage configuration and set size
         console.log('[STEP 1/7] Starting persistent storage configuration with "wtoctl set storage"...');
         await terminal.provideInputIntoWebTerminal('wtoctl set storage');
 
         console.log('[INFO] Setting storage size to 200Mi.');
         await terminal.provideInputIntoWebTerminal('200Mi');
 
-        // Step 2: Set mount path
         console.log('[INFO] Setting mount path to /home/user/storage.');
         await terminal.provideInputIntoWebTerminal('/home/user/storage');
 
-        // Step 3: Confirm configuration
         console.log('[INFO] Confirming configuration with "y".');
         await terminal.provideInputIntoWebTerminal('y');
 
-        // Step 5: Handle terminal restart
         console.log('[INFO] Checking if terminal closed for restart...');
         const closed = await terminal.waitForTerminalClosed(LONG_TIMEOUT);
         if (closed) {

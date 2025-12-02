@@ -33,13 +33,13 @@ Create a file named `.env` in the repository root (see [`sample-env.txt`](./samp
 ```env
 CONSOLE_URL=https://console-openshift-console.apps-crc.testing
 
-# Admin credentials
+# Admin credentials (required when testing admin scenario)
 KUBEADMIN_USERNAME=
 KUBEADMIN_PASSWORD=
 EXPECTED_KUBEADMIN_WHOAMI_OUTPUT=
 ADMIN_WEB_TERMINAL_NAMESPACE=
 
-# User credentials
+# User credentials (required when testing regular user scenario)
 CLUSTER_USER=
 CLUSTER_USER_PASSWORD=
 USER_PROVIDER=
@@ -51,10 +51,17 @@ PLAYWRIGHT_TESTS_HEADLESS=
 
 ### Installation
 
+#### Installing Node dependencies
 Install dependencies locally:
 
 ```bash
 make install
+```
+
+## Installing browser binaries:
+Since Playwright does not automatically download the browsers during npm install, run the following command to download Chromium:
+```shell
+npx playwright install chromium
 ```
 
 ### Running Tests
@@ -73,6 +80,8 @@ This will:
 - Save logs and reports to `playwright_logs/` directory
 
 #### Run All Tests Locally (User Mode)
+
+Note: Test assumes that user is already created. Please run the script for creating user.
 
 Before running make sure that you've logged into terminal via `oc` for specified user. Test checks pod state by `oc exec`
 into terminal pod, it's necessary to log in with correct user:
@@ -115,17 +124,15 @@ This uses the official Playwright Docker image and automatically installs depend
 
 ### Configuration
 
-The tests use environment variables for configuration. These are set automatically by the Makefile, but can be overridden:
+The tests use environment variables for configuration. These are supposed to be set in `.env` file by user before running tests:
 
 - `CONSOLE_URL` - OpenShift console URL
 - `KUBEADMIN_USERNAME` - Admin username (for admin mode)
 - `KUBEADMIN_PASSWORD` - Admin password (for admin mode)
-- `TEST_MODE` - Either `admin` or `user`
-- `TEST_USER` - Regular user username (for user mode)
-- `USER_PASSWORD` - Regular user password (for user mode)
+- `CLUSTER_USER` - Regular user username (for user mode)
+- `CLUSTER_USER_PASSWORD` - Regular user password (for user mode)
 - `USER_PROVIDER` - Identity provider name (for user mode)
 
-**Note**: The Makefile contains hardcoded credentials for testing. In production environments, these should be moved to environment variables or a secure configuration file.
 
 ### Test Reports
 

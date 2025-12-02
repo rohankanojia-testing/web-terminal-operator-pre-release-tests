@@ -73,13 +73,15 @@ test-docker:
 	docker run --rm \
 		-v $$(pwd):/app \
 		-w /app \
-		-e CONSOLE_URL=$(CONSOLE_URL_HARDCODED) \
-		-e EXPECTED_KUBEADMIN_WHOAMI_OUTPUT=$(EXPECTED_KUBEADMIN_WHOAMI_OUTPUT) \
-		-e KUBEADMIN_PASSWORD=$(KUBEADMIN_PASSWORD) \
-		-e TEST_USER=$(CLUSTER_USER) \
-		-e USER_PASSWORD=$(CLUSTER_PASS) \
-		-e USER_PROVIDER=$(DEFAULT_PROVIDER) \
-		-e PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
+                -e CONSOLE_URL=$(CONSOLE_URL) \
+                -e KUBEADMIN_USERNAME=$(KUBEADMIN_USERNAME) \
+                -e EXPECTED_KUBEADMIN_WHOAMI_OUTPUT=$(EXPECTED_KUBEADMIN_WHOAMI_OUTPUT) \
+                -e KUBEADMIN_PASSWORD=$(KUBEADMIN_PASSWORD) \
+                -e WEB_TERMINAL_NAMESPACE=$(ADMIN_WEB_TERMINAL_NAMESPACE) \
+                -e TEST_MODE=admin \
+                -e USER_PROVIDER=$(DEFAULT_PROVIDER) \
+                -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+                -e PLAYWRIGHT_HEADLESS=true \
 		$(DOCKER_IMAGE) \
 		bash -c "\
 			npm install playwright @playwright/test && \
