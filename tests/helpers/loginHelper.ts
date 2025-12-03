@@ -35,44 +35,45 @@ export async function doOpenShiftLoginAsPerMode(page: Page, testMode: string) {
 }
 
 export async function loginOpenShift(page: Page, options: LoginOptions) {
-  const {
-    mode,
-    consoleUrl,
-    username,
-    password,
-    provider,
-  } = options;
+  const { mode, consoleUrl, username, password, provider } = options;
 
   console.log(`Opening console: ${consoleUrl}`);
-  await page.goto(consoleUrl, { waitUntil: "domcontentloaded" });
+  await page.goto(consoleUrl, { waitUntil: 'domcontentloaded' });
 
-  await page.waitForFunction(() => window.location.href.includes("/oauth/authorize"), { timeout: SHORT_TIMEOUT });
-  if (page.url().includes("/oauth/authorize")) {
-    console.log("🔐 OAuth redirect detected — handling OAuth flow…");
+  // Wait for either /login or /oauth/authorize page to appear
+  const isOauthFirst = await Promise.race([
+    // OAuth page check
+    page.waitForFunction(() => window.location.href.includes('/oauth/authorize'), { timeout: SHORT_TIMEOUT })
+        .then(() => true)
+        .catch(() => false),
+
+    // Login page check
+    page.waitForFunction(() => window.location.href.includes('/login'), { timeout: SHORT_TIMEOUT })
+        .then(() => false)
+        .catch(() => false)
+  ]);
+
+  if (isOauthFirst) {
+    console.log('🔐 OAuth redirect detected — handling OAuth flow…');
     await selectIdentityProvider(page, mode, provider);
   }
 
-  // 2️⃣ Detect username & password fields
-  // Different OpenShift versions use different IDs, so try both
+  // Proceed to login form (works for both OAuth redirect and direct login)
   const usernameInput = page.locator('#inputUsername, #Username');
   const passwordInput = page.locator('#inputPassword, #Password');
   const loginButton = page.getByRole('button', { name: 'Log in' });
 
-  console.log("Waiting for login form...");
-
+  console.log('Waiting for login form...');
   await usernameInput.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   await passwordInput.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   await loginButton.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
 
-  console.log("Login form detected.");
-
-  // 3️⃣ Fill credentials using provided username
   console.log(`Logging in as: ${username}`);
   await usernameInput.fill(username);
   await passwordInput.fill(password);
-
   await loginButton.click();
-  await page.waitForLoadState("networkidle"); // waits until page finishes loading
+
+  await page.waitForLoadState('networkidle');
 
   console.log(`Login successful as ${username}`);
   await skipTourIfPresent(page);
