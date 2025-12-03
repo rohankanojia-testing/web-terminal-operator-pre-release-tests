@@ -67,7 +67,7 @@ export class WebTerminalPage {
     this.page.locator('input#form-input-newNamespace-field');
     const projectDropdown = this.page.locator('button#form-ns-dropdown-namespace-field');
     const projectFilterInput = this.page.locator('input[placeholder="Select Project"]');
-    const projectEntry = this.page.locator(`button#${namespace}-link`);
+    const projectEntry = this.page.locator(`li[role="option"] >> text="${namespace}"`);
 
     const isDropdownVisible = await projectDropdown.isVisible({ timeout });
     if (isDropdownVisible) {
@@ -80,7 +80,6 @@ export class WebTerminalPage {
         console.debug(`Typing "${namespace}" in dropdown filter`);
         await projectFilterInput.focus();
         await this.page.keyboard.type(namespace, { delay: 0 });
-        await projectEntry.waitFor({ state: 'visible', timeout });
       } else {
         console.warn(`${debugPrefix}: ⚠️ STAGE 2A FAIL: Dropdown filter input not visible.`);
       }

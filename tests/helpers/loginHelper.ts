@@ -46,6 +46,7 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
   console.log(`Opening console: ${consoleUrl}`);
   await page.goto(consoleUrl, { waitUntil: "domcontentloaded" });
 
+  await page.waitForFunction(() => window.location.href.includes("/oauth/authorize"), { timeout: SHORT_TIMEOUT });
   if (page.url().includes("/oauth/authorize")) {
     console.log("🔐 OAuth redirect detected — handling OAuth flow…");
     await selectIdentityProvider(page, mode, provider);
@@ -74,6 +75,7 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
   await page.waitForLoadState("networkidle"); // waits until page finishes loading
 
   console.log(`Login successful as ${username}`);
+  await skipTourIfPresent(page);
 }
 
 /**
@@ -130,5 +132,15 @@ async function selectIdentityProvider(
 
   // Wait until the username/password form appears
   await page.waitForTimeout(SHORT_TIMEOUT); // short delay to allow redirect
+}
+
+async function skipTourIfPresent(page: Page) {
+  try {
+    const skipButton = await page.waitForSelector('button:has-text("Skip tour")', { timeout: SHORT_TIMEOUT });
+    if (skipButton) {
+      console.log(`Skip tour: ${skipButton}`);
+      await skipButton.click();
+    }
+  } catch {}
 }
 
