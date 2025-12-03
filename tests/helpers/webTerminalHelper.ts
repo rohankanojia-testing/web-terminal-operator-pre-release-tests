@@ -35,12 +35,17 @@ export class WebTerminalPage {
     await this.clickOnWebTerminalIcon();
 
     const terminalTextArea = this.webTerminalPage; // Your xterm locator
-    const initPanel =  this.page.locator('.wt-cloud-shell-setup');
+    // Use the new, robust locator
+    const initPanel = this.page.locator('section').filter({
+      has: this.page.getByRole('heading', { name: 'Initialize terminal' })
+    });
 
     console.debug("⏳ Detecting whether terminal needs initialization...");
 
     const initNeeded = await Promise.race([
+      // Check if the initialization panel is visible
       initPanel.waitFor({ state: 'visible', timeout }).then(() => true).catch(() => false),
+      // Check if the terminal itself is visible
       terminalTextArea.waitFor({ state: 'visible', timeout }).then(() => false).catch(() => false)
     ]);
 
