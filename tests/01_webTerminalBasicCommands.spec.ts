@@ -12,7 +12,7 @@ const test = base.extend<{ page: any }>({
         await use(page);
     },
 });
-test.setTimeout(LONG_TIMEOUT);
+test.setTimeout(TEST_SETUP_TIMEOUT);
 test.describe.configure({ mode: 'serial' });
 
 test.describe('OpenShift Web Terminal E2E - Sequential execution of basic commands', () => {

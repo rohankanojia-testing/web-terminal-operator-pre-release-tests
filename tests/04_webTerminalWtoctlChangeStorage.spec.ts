@@ -11,15 +11,15 @@ const test = base.extend<{ page: any }>({
         await use(page);
     },
 });
-test.setTimeout(LONG_TIMEOUT);
 test.describe.configure({ mode: 'serial' }); // sequential
+test.setTimeout(TEST_SETUP_TIMEOUT);
 
 test.describe('WTOCTL : Change PVC storage', () => {
     let terminal: WebTerminalPage;
 
     test.beforeAll(async ({ page }) => {
-        const testMode = process.env.TEST_MODE || 'admin';
         test.setTimeout(TEST_SETUP_TIMEOUT);
+        const testMode = process.env.TEST_MODE || 'admin';
         await doOpenShiftLoginAsPerMode(page, testMode);
         terminal = new WebTerminalPage(page);
         await terminal.openWebTerminal(LONG_TIMEOUT);

@@ -11,8 +11,9 @@ const test = base.extend<{ page: any }>({
         await use(page);
     },
 });
-test.setTimeout(LONG_TIMEOUT);
+
 test.describe.configure({ mode: 'serial' }); // sequential
+test.setTimeout(TEST_SETUP_TIMEOUT);
 
 test.describe('WTOCTL : Change ', () => {
     let terminal: WebTerminalPage;
