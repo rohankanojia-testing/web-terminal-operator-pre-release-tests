@@ -64,45 +64,64 @@ export class WebTerminalPage {
   async handleProjectCreationIfNeeded(namespace: string, timeout: number) {
     const debugPrefix = `[Debug] Project creation for "${namespace}"`;
 
-    this.page.locator('input#form-input-newNamespace-field');
     const projectDropdown = this.page.locator('button#form-ns-dropdown-namespace-field');
     const projectFilterInput = this.page.locator('input[placeholder="Select Project"]');
-    const projectEntry = this.page.locator(`li[role="option"] >> text="${namespace}"`);
 
-    const isDropdownVisible = await projectDropdown.isVisible({ timeout });
-    if (isDropdownVisible) {
-      console.debug('Project dropdown detected — clicking to open...');
-      await projectDropdown.click();
-      console.log(`${debugPrefix}: Checking for Dropdown Filter input...`);
-
-      const isFilterVisible = await projectFilterInput.isVisible({ timeout: timeout }); // Shorter timeout for sub-element
-      if (isFilterVisible) {
-        console.debug(`Typing "${namespace}" in dropdown filter`);
-        await projectFilterInput.focus();
-        await this.page.keyboard.type(namespace, { delay: 0 });
-      } else {
-        console.warn(`${debugPrefix}: ⚠️ STAGE 2A FAIL: Dropdown filter input not visible.`);
-      }
-
-      console.log(`${debugPrefix}: Checking for Project Entry "${namespace}"...`);
-
-      const isProjectEntryVisible = await projectEntry.isVisible({ timeout: timeout }); // Shorter timeout
-
-      console.log(`${debugPrefix}:   -> Project Entry visibility check result: ${isProjectEntryVisible}`);
-
-      if (isProjectEntryVisible) {
-        console.debug(`✅ STAGE 2B SUCCESS: Selecting project "${namespace}"`);
-        await projectEntry.click();
-        return true; // Project selected
-      } else {
-        console.warn(`${debugPrefix}: ⚠️ STAGE 2B FAIL: Project "${namespace}" not found in dropdown list.`);
-        return false;
-      }
+    const isDropdownVisible = await projectDropdown.isVisible({ timeout }).catch(() => false);
+    if (!isDropdownVisible) {
+      console.warn(`${debugPrefix}: ❌ Project dropdown not found within timeout.`);
+      return false;
     }
 
-    console.warn(`${debugPrefix}: ❌ FINAL FAILURE: Neither 'New Project' input nor dropdown found within timeout.`);
-    return false;
+    console.debug(`${debugPrefix}: Project dropdown detected — clicking to open...`);
+    await projectDropdown.click();
+
+    const isFilterVisible = await projectFilterInput.isVisible({ timeout }).catch(() => false);
+    if (!isFilterVisible) {
+      console.warn(`${debugPrefix}: ⚠️ Dropdown filter input not visible.`);
+      return false;
+    }
+
+    console.debug(`${debugPrefix}: Typing "${namespace}" in dropdown filter`);
+    await projectFilterInput.fill(namespace);
+    await this.page.waitForTimeout(200); // Allow dropdown to update
+
+    console.log(`${debugPrefix}: Waiting for project entry (handles 4.17 & 4.20)...`);
+
+    // Race between 4.20 button and 4.17 li
+    const entry20Promise = this.page
+        .locator(`button#${namespace}-link`)
+        .waitFor({ state: 'visible', timeout })
+        .then(() => 'v4.20')
+        .catch(() => false);
+
+    const entry17Promise = this.page
+        .locator(`li[role="option"] >> text="${namespace}"`)
+        .waitFor({ state: 'visible', timeout })
+        .then(() => 'v4.17')
+        .catch(() => false);
+
+    const result = await Promise.race([entry20Promise, entry17Promise]);
+
+    let projectEntry;
+    if (result === 'v4.20') {
+      console.log(`${debugPrefix}: Detected OpenShift 4.20 style project entry`);
+      projectEntry = this.page.locator(`button#${namespace}-link`);
+    } else if (result === 'v4.17') {
+      console.log(`${debugPrefix}: Detected OpenShift 4.17 style project entry`);
+      projectEntry = this.page.locator(`li[role="option"] >> text="${namespace}"`);
+    } else {
+      console.warn(`${debugPrefix}: ⚠️ Project "${namespace}" not found in dropdown list.`);
+      return false;
+    }
+
+    await projectEntry.scrollIntoViewIfNeeded();
+    await projectEntry.click();
+
+    console.debug(`${debugPrefix}: ✅ Project "${namespace}" selected successfully`);
+    return true;
   }
+
 
   /**
    * Detects if the "Initialize terminal" page is shown.
