@@ -51,7 +51,7 @@ test-user: install
 	@echo "Running Playwright tests locally..."
 	@echo "Logs will be saved in: $(LOG_DIR)"
 	@mkdir -p $(LOG_DIR)
-	@oc get namespace $(USER_WEB_TERMINAL_NAMESPACE) >/dev/null 2>&1 || oc create namespace $(USER_WEB_TERMINAL_NAMESPACE)
+	@oc new-project $(USER_WEB_TERMINAL_NAMESPACE) || true
 	CONSOLE_URL=$(CONSOLE_URL) \
 	TEST_MODE=user \
 	TEST_USER=$(CLUSTER_USER) \
