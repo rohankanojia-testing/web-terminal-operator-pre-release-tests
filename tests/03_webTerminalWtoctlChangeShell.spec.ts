@@ -5,7 +5,9 @@ import {LONG_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
 
 const test = base.extend<{ page: any }>({
     page: async ({}, use) => {
-        const browser = await chromium.launch({ headless: false });
+        const browser = await chromium.launch({ 
+            headless: process.env.PLAYWRIGHT_HEADLESS !== 'false' 
+        });
         const context = await browser.newContext();
         const page = await context.newPage();
         await use(page);
