@@ -96,15 +96,10 @@ test-docker:
 # -------------------------------
 .PHONY: test-dwo-editor
 test-dwo-editor: install
-	@if [ -z "$(DEVWORKSPACE_URL)" ]; then \
-		echo "❌ DEVWORKSPACE_URL is not set. Please export it before running:"; \
-		echo "   export DEVWORKSPACE_URL=\$$(oc get devworkspace \"\$${WORKSPACE_NAME}\" -n openshift-operators -o jsonpath='{.status.mainUrl}')"; \
-		exit 1; \
-	fi
 	@echo "Running DevWorkspace VS Code UI test..."
-	@echo "DEVWORKSPACE_URL=$(DEVWORKSPACE_URL)"
 	@mkdir -p $(LOG_DIR)
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
 	npx playwright test --project=vscode-web-chromium --reporter=list --output=$(LOG_DIR)
 	@echo "DevWorkspace VS Code UI test completed. Logs saved in $(LOG_DIR)"
+
