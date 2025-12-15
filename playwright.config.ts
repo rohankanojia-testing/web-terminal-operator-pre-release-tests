@@ -25,11 +25,16 @@ export default defineConfig({
     headless: process.env.PLAYWRIGHT_HEADLESS !== 'false',
   },
 
-  /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
+      name: 'web-terminal-chromium',
       use: { ...devices['Desktop Chrome'] },
+      testMatch: /webTerminal.*\.spec\.ts/, // only terminal tests
+    },
+    {
+      name: 'vscode-web-chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /vscode-web\/.*\.spec\.ts/, // only VS Code Web tests
     },
   ],
 });
