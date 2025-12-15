@@ -29,12 +29,20 @@ export default defineConfig({
     {
       name: 'web-terminal-chromium',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /webTerminal.*\.spec\.ts/, // only terminal tests
+      testMatch: [
+        '01_webTerminalBasicCommands.spec.ts',
+        '02_webTerminalWtoctlChangeImage.spec.ts',
+        '03_webTerminalWtoctlChangeShell.spec.ts',
+        '04_webTerminalWtoctlChangeStorage.spec.ts',
+        '05_webTerminalWtoctlChangeTimeout.spec.ts',
+      ].map((file) => `tests/${file}`),
     },
     {
       name: 'vscode-web-chromium',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /vscode-web\/.*\.spec\.ts/, // only VS Code Web tests
+      testMatch: [
+        'vscode-web/devWorkspaceEditorLoadsSuccessfully.spec.ts',
+      ].map((file) => `tests/${file}`),
     },
   ],
 });

@@ -43,7 +43,7 @@ test: install
 	USER_PROVIDER=$(DEFAULT_PROVIDER) \
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
-	npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
+	npx playwright test --project=web-terminal-chromium $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
 
 .PHONY: test-user
@@ -60,7 +60,7 @@ test-user: install
 	WEB_TERMINAL_NAMESPACE=$(USER_WEB_TERMINAL_NAMESPACE) \
 	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
-	npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
+	npx playwright test --project=web-terminal-chromium $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
 
 # -------------------------------
@@ -87,7 +87,7 @@ test-docker:
 		bash -c "\
 			npm install playwright @playwright/test && \
 			npx playwright install --with-deps && \
-			npx playwright test $(TEST_FILE) --reporter=list --output=$(LOG_DIR_CONTAINER) \
+			npx playwright test --project=web-terminal-chromium $(TEST_FILE) --reporter=list --output=$(LOG_DIR_CONTAINER) \
 		"
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
 
