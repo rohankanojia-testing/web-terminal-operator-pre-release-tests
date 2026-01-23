@@ -25,6 +25,8 @@ install:
 	else \
 		echo "Node modules already exist, skipping install."; \
 	fi
+	@echo "Installing Playwright browsers..."
+	@npx playwright install
 
 # -------------------------------
 # Run tests locally
