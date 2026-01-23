@@ -43,6 +43,7 @@ test: install
 	WEB_TERMINAL_NAMESPACE=$(ADMIN_WEB_TERMINAL_NAMESPACE) \
 	TEST_MODE=admin \
 	USER_PROVIDER=$(DEFAULT_PROVIDER) \
+	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
 	npx playwright test --project=web-terminal-chromium $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
@@ -59,6 +60,7 @@ test-user: install
 	USER_PASSWORD=$(CLUSTER_USER_PASSWORD) \
 	USER_PROVIDER=$(USER_PROVIDER) \
 	WEB_TERMINAL_NAMESPACE=$(USER_WEB_TERMINAL_NAMESPACE) \
+	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
 	npx playwright test --project=web-terminal-chromium $(TEST_FILE) --reporter=list --output=$(LOG_DIR)
 	@echo "E2E tests completed. Logs and report saved in $(LOG_DIR)"
@@ -81,6 +83,7 @@ test-docker:
                 -e WEB_TERMINAL_NAMESPACE=$(ADMIN_WEB_TERMINAL_NAMESPACE) \
                 -e TEST_MODE=admin \
                 -e USER_PROVIDER=$(DEFAULT_PROVIDER) \
+                -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
                 -e PLAYWRIGHT_HEADLESS=true \
 		$(DOCKER_IMAGE) \
 		bash -c "\
@@ -97,6 +100,7 @@ test-docker:
 test-dwo-editor: install
 	@echo "Running DevWorkspace VS Code UI test..."
 	@mkdir -p $(LOG_DIR)
+	PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
 	PLAYWRIGHT_HEADLESS=$(PLAYWRIGHT_TESTS_HEADLESS) \
 	npx playwright test --project=vscode-web-chromium --reporter=list --output=$(LOG_DIR)
 	@echo "DevWorkspace VS Code UI test completed. Logs saved in $(LOG_DIR)"
