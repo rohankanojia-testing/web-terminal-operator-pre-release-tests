@@ -22,11 +22,11 @@ install:
 	@if [ ! -d "node_modules" ]; then \
 		echo "Installing Node dependencies locally..."; \
 		npm install playwright @playwright/test; \
+		echo "Installing Playwright browsers..."; \
+		npx playwright install; \
 	else \
 		echo "Node modules already exist, skipping install."; \
 	fi
-	@echo "Installing Playwright browsers..."
-	@npx playwright install
 
 # -------------------------------
 # Run tests locally
