@@ -5,7 +5,7 @@ import * as util from "node:util";
 const execPromise = util.promisify(exec);
 
 export class OcUtils {
-    static async getTerminalOutput(lines: number = 10): Promise<string> {
+    static async getTerminalOutput(lines: number = 30): Promise<string> {
         try {
             const namespace = process.env.WEB_TERMINAL_NAMESPACE;
             if (!namespace) throw new Error("WEB_TERMINAL_NAMESPACE environment variable is not set");
