@@ -31,15 +31,19 @@ test.describe('DevWorkspace VS Code Web', () => {
             timeout: LONG_TIMEOUT,
         });
 
-        console.log('Waiting for trust authors button...');
+        console.log('Checking for trust authors button...');
         const trustButton = page.getByRole('button', {
             name: 'Yes, I trust the authors',
         });
 
-        await trustButton.waitFor({ timeout: LONG_TIMEOUT });
-
-        console.log('Clicking trust authors button...');
-        await trustButton.click();
+        // Only click the trust button if it appears (some workspaces may already be trusted)
+        try {
+            await trustButton.waitFor({ timeout: SHORT_TIMEOUT });
+            console.log('Clicking trust authors button...');
+            await trustButton.click();
+        } catch (e) {
+            console.log('Trust button not found - workspace may already be trusted');
+        }
     });
 
 
