@@ -75,7 +75,25 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
 
   await page.waitForLoadState('networkidle');
 
-  console.log(`Login successful as ${username}`);
+  // Check if login failed - look for error message
+  const errorMessage = page.locator('text=/Invalid login or password|Authentication failed|Login failed/i');
+  const hasError = await errorMessage.isVisible().catch(() => false);
+
+  if (hasError) {
+    const errorText = await errorMessage.textContent();
+    // Take screenshot for debugging
+    await page.screenshot({ path: 'playwright_logs/login-error.png', fullPage: true });
+    throw new Error(`❌ Login failed: ${errorText}. Screenshot saved to playwright_logs/login-error.png`);
+  }
+
+  // Check if we're still on the login page (another sign of failure)
+  const stillOnLoginPage = await page.url().includes('/login');
+  if (stillOnLoginPage) {
+    await page.screenshot({ path: 'playwright_logs/login-stuck.png', fullPage: true });
+    throw new Error(`❌ Login failed: Still on login page after attempting login. Screenshot saved to playwright_logs/login-stuck.png`);
+  }
+
+  console.log(`✅ Login successful as ${username}`);
   await skipTourIfPresent(page);
 }
 

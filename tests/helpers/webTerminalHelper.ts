@@ -22,7 +22,33 @@ export class WebTerminalPage {
 
   async clickOnWebTerminalIcon() {
     console.debug('Clicking on Web Terminal icon...');
-    await this.webTerminalButton.click();
+
+    // Add explicit wait with better error message
+    try {
+      console.debug('Waiting for Web Terminal button to be visible...');
+      await this.webTerminalButton.waitFor({ state: 'visible', timeout: 30000 });
+      console.debug('Web Terminal button is visible, attempting click...');
+      await this.webTerminalButton.click({ timeout: 10000 });
+      console.debug('Successfully clicked Web Terminal button');
+    } catch (error) {
+      // Log detailed error information
+      const count = await this.webTerminalButton.count();
+      console.error(`❌ Failed to click Web Terminal button. Elements found: ${count}`);
+
+      if (count > 0) {
+        const isVisible = await this.webTerminalButton.isVisible().catch(() => false);
+        const isEnabled = await this.webTerminalButton.isEnabled().catch(() => false);
+        const box = await this.webTerminalButton.boundingBox().catch(() => null);
+        console.error(`Button state - Visible: ${isVisible}, Enabled: ${isEnabled}, BoundingBox: ${JSON.stringify(box)}`);
+      }
+
+      // Take a screenshot for debugging
+      await this.page.screenshot({ path: 'playwright_logs/error-web-terminal-button.png', fullPage: true }).catch(() => {
+        console.debug('Could not save screenshot');
+      });
+
+      throw error;
+    }
   }
 
   async clickOnStartWebTerminalButton() {
