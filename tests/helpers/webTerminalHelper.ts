@@ -173,6 +173,8 @@ export class WebTerminalPage {
     await this.webTerminalPage.focus();
     await this.page.keyboard.type(`${text} >> /tmp/test-stdout.txt 2>&1`,  { delay: 0 });
     await this.page.keyboard.press('Enter');
+    // Small delay to allow command to start executing before we try to read output
+    await this.page.waitForTimeout(500);
   }
 
   async provideInputIntoWebTerminal(text: string) {

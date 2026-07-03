@@ -5,13 +5,14 @@ import * as util from "node:util";
 const execPromise = util.promisify(exec);
 
 export class OcUtils {
-    static async getTerminalOutput(lines: number = 30): Promise<string> {
-        try {
-            const namespace = process.env.WEB_TERMINAL_NAMESPACE;
-            if (!namespace) throw new Error("WEB_TERMINAL_NAMESPACE environment variable is not set");
+    static async getTerminalOutput(lines: number = 30, retries: number = 3, retryDelay: number = 1000): Promise<string> {
+        const namespace = process.env.WEB_TERMINAL_NAMESPACE;
+        if (!namespace) throw new Error("WEB_TERMINAL_NAMESPACE environment variable is not set");
 
-            // One-call shell command
-            const command = `
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                // One-call shell command with file existence check
+                const command = `
 sh -c '
   # Step 1: Get the first pod matching the devworkspace_name label
   POD=$(oc get pods -n ${namespace} \
@@ -28,23 +29,48 @@ sh -c '
   echo "[DEBUG] Waiting for pod $POD to be Ready..." >&2
   oc wait pod "$POD" -n ${namespace} --for=condition=Ready --timeout=30s
 
-  # Step 3: Tail last N lines from terminal file (stdout + stderr)
+  # Step 3: Check if file exists, if not wait briefly and retry
+  echo "[DEBUG] Checking if ${TERMINAL_OUTPUT_FILE_NAME} exists in pod..." >&2
+  if ! oc exec -n ${namespace} "$POD" -c web-terminal-tooling -- test -f /tmp/test-stdout.txt 2>/dev/null; then
+    echo "[DEBUG] File does not exist yet, waiting..." >&2
+    sleep 1
+    # Try again after brief wait
+    if ! oc exec -n ${namespace} "$POD" -c web-terminal-tooling -- test -f /tmp/test-stdout.txt 2>/dev/null; then
+      echo "[DEBUG] File still does not exist" >&2
+      exit 2
+    fi
+  fi
+
+  # Step 4: Tail last N lines from terminal file (stdout + stderr)
   echo "[DEBUG] Fetching last ${lines} lines from ${TERMINAL_OUTPUT_FILE_NAME}" >&2
   oc exec -n ${namespace} "$POD" -c web-terminal-tooling -- tail -n ${lines} /tmp/test-stdout.txt
 '
         `;
 
-            const { stdout, stderr } = await execPromise(command);
+                const { stdout, stderr } = await execPromise(command);
 
-            console.debug("=== One-call execution complete ===");
-            if (stderr) console.debug("STDERR from shell command:\n", stderr);
-            console.debug("STDOUT from shell command:\n", stdout);
+                console.debug("=== One-call execution complete ===");
+                if (stderr) console.debug("STDERR from shell command:\n", stderr);
+                console.debug("STDOUT from shell command:\n", stdout);
 
-            return stdout.trim();
+                return stdout.trim();
 
-        } catch (error: any) {
-            console.error("Failed to fetch terminal output:", error.message);
-            return "";
+            } catch (error: any) {
+                const isFileNotFound = error.message?.includes("No such file") || error.code === 2;
+                const isLastAttempt = attempt === retries;
+
+                if (isFileNotFound && !isLastAttempt) {
+                    console.debug(`[Retry ${attempt}/${retries}] File not ready yet, retrying in ${retryDelay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    continue;
+                }
+
+                if (isLastAttempt) {
+                    console.error(`Failed to fetch terminal output after ${retries} attempts:`, error.message);
+                }
+                return "";
+            }
         }
+        return "";
     }
 }
