@@ -17,7 +17,7 @@ sh -c '
   # Step 1: Get the first pod matching the devworkspace_name label
   POD=$(oc get pods -n ${namespace} \
     -l controller.devfile.io/devworkspace_name \
-    -o jsonpath="{.items[?(@.metadata.labels.controller\\.devfile\\.io/devworkspace_name)].metadata.name}" | head -n 1)
+    -o jsonpath="{.items[?(@.metadata.labels.controller\\.devfile\\.io/devworkspace_name)].metadata.name}" | awk "{print \\$1}")
   echo "[DEBUG] Found pod: $POD" >&2
 
   if [ -z "$POD" ]; then
@@ -27,7 +27,7 @@ sh -c '
 
   # Step 2: Wait until pod is ready
   echo "[DEBUG] Waiting for pod $POD to be Ready..." >&2
-  oc wait pod "$POD" -n ${namespace} --for=condition=Ready --timeout=30s
+  oc wait pod "$POD" -n ${namespace} --for=condition=Ready --timeout=30s >&2
 
   # Step 3: Check if file exists, if not wait briefly and retry
   echo "[DEBUG] Checking if ${TERMINAL_OUTPUT_FILE_NAME} exists in pod..." >&2
