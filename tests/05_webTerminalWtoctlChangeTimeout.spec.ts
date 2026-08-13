@@ -2,6 +2,7 @@ import { test as base, expect, chromium } from '@playwright/test';
 import { WebTerminalPage } from './helpers/webTerminalHelper';
 import {doOpenShiftLoginAsPerMode} from './helpers/loginHelper';
 import {LONG_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
+import {OcUtils} from "./helpers/ocUtils";
 
 const test = base.extend<{ page: any }>({
     page: async ({}, use) => {
@@ -21,6 +22,7 @@ test.describe('WTOCTL : Change shell to zsh', () => {
 
     test.beforeAll(async ({ page }) => {
         test.setTimeout(TEST_SETUP_TIMEOUT);
+        await OcUtils.verifyCliUser();
         const testMode = process.env.TEST_MODE || 'admin';
         await doOpenShiftLoginAsPerMode(page, testMode);
         terminal = new WebTerminalPage(page);

@@ -2,6 +2,7 @@ import { test as base, chromium } from '@playwright/test';
 import { WebTerminalPage } from './helpers/webTerminalHelper';
 import {doOpenShiftLoginAsPerMode} from './helpers/loginHelper';
 import {LONG_TIMEOUT, TEST_SETUP_TIMEOUT} from "./helpers/constants";
+import {OcUtils} from "./helpers/ocUtils";
 
 const test = base.extend<{ page: any }>({
     page: async ({}, use) => {
@@ -22,6 +23,7 @@ test.describe('WTOCTL : Change ', () => {
 
     test.beforeAll(async ({ page }) => {
         test.setTimeout(TEST_SETUP_TIMEOUT);
+        await OcUtils.verifyCliUser();
         await doOpenShiftLoginAsPerMode(page, process.env.TEST_MODE || 'admin');
         terminal = new WebTerminalPage(page);
         await terminal.openWebTerminal(LONG_TIMEOUT);

@@ -5,6 +5,33 @@ import * as util from "node:util";
 const execPromise = util.promisify(exec);
 
 export class OcUtils {
+    static async verifyCliUser(): Promise<void> {
+        const namespace = process.env.WEB_TERMINAL_NAMESPACE;
+        const testMode = process.env.TEST_MODE || 'admin';
+        try {
+            const { stdout } = await execPromise('oc whoami');
+            const currentUser = stdout.trim();
+            console.log(`[Preflight] oc CLI logged in as: ${currentUser}`);
+
+            const { stdout: nsCheck } = await execPromise(
+                `oc auth can-i list pods -n ${namespace} 2>&1 || true`
+            );
+            if (nsCheck.trim() !== 'yes') {
+                throw new Error(
+                    `Current oc user "${currentUser}" cannot list pods in namespace "${namespace}". ` +
+                    `Run: oc login -u <${testMode === 'admin' ? 'kubeadmin' : 'expected-user'}> before running tests.`
+                );
+            }
+            console.log(`[Preflight] oc CLI user "${currentUser}" has access to namespace "${namespace}"`);
+        } catch (error: any) {
+            if (error.message?.includes('cannot list pods')) throw error;
+            throw new Error(
+                `[Preflight] oc CLI is not logged in or not accessible: ${error.message}\n` +
+                `Ensure KUBECONFIG is set and you are logged in with the correct user.`
+            );
+        }
+    }
+
     static async getTerminalOutput(lines: number = 30, retries: number = 3, retryDelay: number = 1000): Promise<string> {
         const namespace = process.env.WEB_TERMINAL_NAMESPACE;
         if (!namespace) throw new Error("WEB_TERMINAL_NAMESPACE environment variable is not set");

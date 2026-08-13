@@ -23,6 +23,7 @@ test.describe('OpenShift Web Terminal E2E - Sequential execution of basic comman
 
     test.beforeAll(async ({ page }) => {
         test.setTimeout(TEST_SETUP_TIMEOUT);
+        await OcUtils.verifyCliUser();
         testMode = process.env.TEST_MODE || 'admin';
         await doOpenShiftLoginAsPerMode(page, testMode);
 
