@@ -126,7 +126,7 @@ async function selectIdentityProvider(
   console.log("'Log in with' page detected.");
 
   // Determine which provider to click
-  const providerName = mode === "admin" ? "kube:admin" : provider;
+  const providerName = mode === "admin" ? (process.env.ADMIN_PROVIDER || "kube:admin") : provider;
   if (!providerName) {
     console.log("No provider specified — skipping provider selection.");
     return;
