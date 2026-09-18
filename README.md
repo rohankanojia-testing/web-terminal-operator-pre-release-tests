@@ -148,3 +148,17 @@ Or open `playwright-report/index.html` in your browser.
 
 Test logs and traces are saved in the `playwright_logs/` directory.
 
+
+## Login regression tests
+
+The login helper supports direct OpenShift and Keycloak forms and identity-provider
+selection. Set `ADMIN_PROVIDER` to override the admin provider; otherwise the admin
+target uses `DEFAULT_PROVIDER`. Regular-user tests use `USER_PROVIDER`.
+
+Run the mocked login flows without cluster credentials:
+
+```bash
+npm install
+npx playwright install chromium
+npx playwright test --config=regression/playwright.config.ts
+```

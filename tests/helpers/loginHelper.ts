@@ -18,7 +18,7 @@ export async function doOpenShiftLoginAsPerMode(page: Page, testMode: string) {
           consoleUrl: process.env.CONSOLE_URL!,
           username: process.env.KUBEADMIN_USERNAME!,
           password: process.env.KUBEADMIN_PASSWORD!,
-          provider: process.env.USER_PROVIDER!,
+          provider: process.env.ADMIN_PROVIDER || process.env.USER_PROVIDER,
       });
   } else if (testMode === 'user') {
       // Regular user login
@@ -40,28 +40,23 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
   console.log(`Opening console: ${consoleUrl}`);
   await page.goto(consoleUrl, { waitUntil: 'domcontentloaded' });
 
-  // Wait for either /login or /oauth/authorize page to appear
-  const isOauthFirst = await Promise.race([
-    // OAuth page check
-    page.waitForFunction(() => window.location.href.includes('/oauth/authorize'), { timeout: SHORT_TIMEOUT })
-        .then(() => true)
-        .catch(() => false),
-
-    // Login page check
-    page.waitForFunction(() => window.location.href.includes('/login'), { timeout: SHORT_TIMEOUT })
-        .then(() => false)
-        .catch(() => false)
-  ]);
-
-  if (isOauthFirst) {
-    console.log('🔐 OAuth redirect detected — handling OAuth flow…');
-    await selectIdentityProvider(page, mode, provider);
+  // OpenShift and Keycloak can show the form directly or after provider selection.
+  // Inspect visible controls instead of assuming a particular OAuth URL path.
+  const usernameInput = page.locator('#inputUsername, #Username, #username').first();
+  const passwordInput = page.locator('#inputPassword, #Password, #password').first();
+  const loginButton = page.locator('#kc-login').or(
+    page.getByRole('button', { name: /^(log in|sign in)$/i })
+  ).first();
+  const providerName = provider || (mode === 'admin' ? 'kube:admin' : undefined);
+  if (providerName) {
+    const providerButton = page.getByRole('link', { name: providerName, exact: true }).or(
+      page.getByRole('button', { name: providerName, exact: true })
+    ).first();
+    await usernameInput.or(providerButton).first().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    if (!(await usernameInput.isVisible())) {
+      await providerButton.click();
+    }
   }
-
-  // Proceed to login form (works for both OAuth redirect and direct login)
-  const usernameInput = page.locator('#inputUsername, #Username');
-  const passwordInput = page.locator('#inputPassword, #Password');
-  const loginButton = page.getByRole('button', { name: 'Log in' });
 
   console.log('Waiting for login form...');
   await usernameInput.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
@@ -73,84 +68,14 @@ export async function loginOpenShift(page: Page, options: LoginOptions) {
   await passwordInput.fill(password);
   await loginButton.click();
 
-  await page.waitForLoadState('networkidle');
-
-  // Check if login failed - look for error message
-  const errorMessage = page.locator('text=/Invalid login or password|Authentication failed|Login failed/i');
-  const hasError = await errorMessage.isVisible().catch(() => false);
-
-  if (hasError) {
-    const errorText = await errorMessage.textContent();
-    // Take screenshot for debugging
-    await page.screenshot({ path: 'playwright_logs/login-error.png', fullPage: true });
-    throw new Error(`❌ Login failed: ${errorText}. Screenshot saved to playwright_logs/login-error.png`);
-  }
-
-  // Check if we're still on the login page (another sign of failure)
-  const stillOnLoginPage = await page.url().includes('/login');
-  if (stillOnLoginPage) {
-    await page.screenshot({ path: 'playwright_logs/login-stuck.png', fullPage: true });
-    throw new Error(`❌ Login failed: Still on login page after attempting login. Screenshot saved to playwright_logs/login-stuck.png`);
-  }
+  // A Keycloak authentication URL does not necessarily contain /login.
+  // Require navigation back to the console before declaring login successful.
+  const consoleOrigin = new URL(consoleUrl).origin;
+  await page.waitForURL(url => url.origin === consoleOrigin &&
+    !/^\/(auth|login|oauth)(\/|$)/.test(url.pathname), { timeout: LONG_TIMEOUT });
 
   console.log(`✅ Login successful as ${username}`);
   await skipTourIfPresent(page);
-}
-
-/**
- * Selects the identity provider when the "Log in with" page appears.
- * Safe to call even when the page does not exist.
- */
-async function selectIdentityProvider(
-  page: Page,
-  mode: string,
-  provider?: string
-) {
-  console.log("Checking for 'Log in with' identity provider page...");
-
-  // Wait a little in case of redirect
-  await page.waitForTimeout(1000);
-
-  // Look for any heading containing "Log in with"
-  const loginWithHeading = page.locator('h1:has-text("Log in with")');
-  const isVisible = await loginWithHeading
-    .waitFor({ state: "visible", timeout: LONG_TIMEOUT })
-    .then(() => true)
-    .catch(() => false);
-
-  if (!isVisible) {
-    console.log("'Log in with' page NOT shown — skipping provider selection.");
-    return;
-  }
-
-  console.log("'Log in with' page detected.");
-
-  // Determine which provider to click
-  const providerName = mode === "admin" ? (process.env.ADMIN_PROVIDER || "kube:admin") : provider;
-  if (!providerName) {
-    console.log("No provider specified — skipping provider selection.");
-    return;
-  }
-
-  console.log(`Looking for provider button with text: "${providerName}"`);
-
-  // Find a button containing the provider text
-  const providerButton = page.locator(`a:has-text("${providerName}"), button:has-text("${providerName}")`);
-  const buttonVisible = await providerButton
-    .waitFor({ state: "visible", timeout: LONG_TIMEOUT })
-    .then(() => true)
-    .catch(() => false);
-
-  if (!buttonVisible) {
-    console.warn(`Provider '${providerName}' not found — continuing...`);
-    return;
-  }
-
-  console.log(`Clicking provider: ${providerName}`);
-  await providerButton.click();
-
-  // Wait until the username/password form appears
-  await page.waitForTimeout(SHORT_TIMEOUT); // short delay to allow redirect
 }
 
 async function skipTourIfPresent(page: Page) {

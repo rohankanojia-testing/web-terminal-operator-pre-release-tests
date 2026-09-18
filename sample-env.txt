@@ -6,6 +6,8 @@ KUBEADMIN_PASSWORD=<your-password>
 EXPECTED_KUBEADMIN_WHOAMI_OUTPUT=kubeadmin
 ADMIN_WEB_TERMINAL_NAMESPACE=openshift-terminal
 DEFAULT_PROVIDER=kube:admin
+# Optional admin provider override (for example, rhbk):
+# ADMIN_PROVIDER=rhbk
 
 # User credentials
 CLUSTER_USER=developer

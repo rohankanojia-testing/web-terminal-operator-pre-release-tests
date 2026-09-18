@@ -81,6 +81,7 @@ test-docker:
                 -e KUBEADMIN_PASSWORD=$(KUBEADMIN_PASSWORD) \
                 -e WEB_TERMINAL_NAMESPACE=$(ADMIN_WEB_TERMINAL_NAMESPACE) \
                 -e TEST_MODE=admin \
+                -e ADMIN_PROVIDER=$(ADMIN_PROVIDER) \
                 -e USER_PROVIDER=$(DEFAULT_PROVIDER) \
                 -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
                 -e PLAYWRIGHT_HEADLESS=true \
