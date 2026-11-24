@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { test as base, expect, chromium } from '@playwright/test';
@@ -41,10 +42,16 @@ test.describe('WTOCTL : Change terminal timeout', () => {
         const namespace = process.env.WEB_TERMINAL_NAMESPACE;
         if (!namespace) throw new Error('WEB_TERMINAL_NAMESPACE environment variable is not set');
 
-        await terminal.provideInputIntoWebTerminal('printf "\\nTEST_WORKSPACE=%s\\n" "$DEVWORKSPACE_NAME"');
-        const workspaceRow = terminal.terminalRows.filter({ hasText: /^TEST_WORKSPACE=[a-z0-9.-]+\s*$/ });
-        await expect(workspaceRow).toBeVisible();
-        const workspace = (await workspaceRow.innerText()).trim().slice('TEST_WORKSPACE='.length);
+        const marker = `TEST_WORKSPACE_${randomUUID()}=`;
+        await terminal.typeAndEnterIntoWebTerminal(`printf "\\n%s%s\\n" '${marker}' "$DEVWORKSPACE_NAME"`);
+        let workspace = '';
+        await expect.poll(async () => {
+            const output = await OcUtils.getTerminalOutput();
+            const row = output.split('\n').find(line => line.startsWith(marker));
+            workspace = row?.slice(marker.length).trim() ?? '';
+            return workspace;
+        }, { timeout: LONG_TIMEOUT, message: 'Expected the terminal to report its DevWorkspace name' })
+            .toMatch(/^[a-z0-9.-]+$/);
         const target = ['devworkspace', workspace, '-n', namespace];
         const readWorkspace = async () => {
             const { stdout } = await runOc('oc', ['get', ...target, '-o', 'json', '--request-timeout=15s']);
